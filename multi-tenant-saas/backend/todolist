@@ -1,0 +1,47 @@
+-make addedit form modal for shifts companies 
+-make the endpoints for all the admin portals required for developer.
+
+
+for developer we will need : 
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ Organizations   │ │ Total Employees │ │ Active Shifts   │ │ Today's Shifts  │
+│      24         │ │      1,284      │ │       86        │ │      214        │
+└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
+But first we will build and complete the following
+Developer / Platform Admin
+│
+├── Dashboard
+│   ├── Organizations
+│   ├── Employees
+│   ├── Active Shifts
+│   ├── Today's Shifts
+│   └── System Status
+│
+├── Organizations
+│   ├── Search
+│   ├── Organization
+│   ├── Employees
+│   ├── Active Employees
+│   ├── Shifts
+│   └── Today's Shifts
+│
+├── Organization
+│   ├── Overview
+│   ├── Employees
+│   ├── Shifts
+│   ├── Schedule
+│   └── Activity
+│
+└── System
+    ├── API Health
+    ├── Database
+    ├── Redis
+    ├── Jobs
+    └── Errors
+
+[Certain] For your current stage, I'd implement only these four dashboard numbers:
+
+Organizations
+Employees
+Active Shifts
+Today's Shifts
