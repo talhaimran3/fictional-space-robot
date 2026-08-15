@@ -1,26 +1,27 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
+import { useAuth } from "../context/authContext";
 
-export const useShifts = (tenantId) => {
+export const useShifts = () => {
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { token } = useAuth();
   useEffect(() => {
     async function fetchShifts() {
-      console.log("Fetching shifts for tenant:", tenantId);
       try {
         setLoading(true);
         setError(null);
 
-        const res = await apiClient.get("/shifts", {
+        const res = await apiClient.get("/admin/shifts/all", {
           headers: {
-            "X-Tenant-ID": tenantId,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 
-        console.log("Fetched shifts for tenant:", tenantId, res.data);
-        setShifts(res.data?.shifts || []);
+        console.log("Fetched all shifts : ", res.data.data);
+        setShifts(res.data?.data || []);
       } catch (error) {
         setError(
           error?.response?.data?.message ||
@@ -31,13 +32,8 @@ export const useShifts = (tenantId) => {
         setLoading(false);
       }
     }
-
-    if (tenantId) {
-      fetchShifts();
-    } else {
-      setLoading(false);
-    }
-  }, [tenantId]);
+    fetchShifts();
+  }, []);
 
   return {
     shifts,

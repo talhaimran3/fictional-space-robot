@@ -53,9 +53,9 @@ export default function PublicNavbar() {
                <button className="btn-secondary">
                   <Link to="/admin" className="btn-secondary">
                   Admin Portal
-                </Link>
-                  <Link to="/admin2" className="btn-secondary">
-                  Admin Portal2
+                </Link> {""}
+                  <Link to="/developer" className="btn-secondary">
+                  Developer Portal
                 </Link>
               </button>
                   <button className="btn-secondary">

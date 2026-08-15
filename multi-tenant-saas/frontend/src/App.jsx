@@ -13,6 +13,7 @@ import AllOrganizationsPage from "./components/organizations/AllOrganizationsPag
 import { SingleOrganizationPage } from "./components/organizations/singleOrganizationPage";
 import { AddShiftForm } from "./components/shifts/AddShiftForm";
 import { EditShiftForm } from "./components/shifts/EditShiftForm";
+import DeveloperPortal from "./admin/DeveloperPortal";
 
 // // Authenticated Application Portals
 // import DeveloperAdminPortal from './components/DeveloperAdminPortal';
@@ -33,6 +34,8 @@ export default function App() {
           <Route path="/features" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+                    <Route path="/developer" element={<DeveloperPortal />} />
+
           <Route path="/admin" element={<AllOrganizationsShifts />} />
           <Route path="/org/all" element={<AllOrganizationsPage />} />
           <Route path="/org/all/:id" element={<SingleOrganizationPage />} />

@@ -7,6 +7,7 @@ dotenv.config();
  * GET COMPANIES: Fetch all companies
  * Endpoint: GET /api/companies
  */
+
 export const getAllCompanies = async (req, res) => {
   try {
     const queryText = `

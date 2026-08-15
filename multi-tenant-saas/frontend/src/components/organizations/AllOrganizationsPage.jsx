@@ -18,7 +18,12 @@ const AllOrganizationsPage = () => {
         setLoading(true);
         setError(null);
 
-        const res = await apiClient.get("/companies/all");
+        const res = await apiClient.get("/admin/companies/all" ,{
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json"
+          },
+        });
 
         setOrganizations(res.data.data || []);
       } catch (err) {

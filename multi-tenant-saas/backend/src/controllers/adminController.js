@@ -17,3 +17,54 @@ export const addCompany = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const getAllCompanies = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT id, name, slug,created_at
+      FROM organizations
+      ORDER BY created_at DESC;
+    `;
+
+    const { rows } = await db.query(queryText);
+
+    console.log("Fetched companies:", rows.map((row) => row.name));
+    res.json({ data: rows });
+  } catch (error) {
+    console.error("Database query failed:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const getAllUsers = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT id, name,
+organization_id, email, created_at , platform_role
+      FROM users
+      ORDER BY created_at DESC;
+    `;
+
+    const result = await db.query(queryText);
+    console.log("Fetched users:", result.rows);
+    res.json({ data: result.rows });
+  } catch (error) {
+    console.error("Database query failed:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const getAllShifts = async (req, res) => {
+  try {
+    const queryText = `
+      SELECT id, organization_id, name, start_time, end_time, created_at
+      FROM shifts
+      ORDER BY created_at DESC;
+    `;
+
+    const result = await db.query(queryText);
+    console.log("Fetched shifts:", result.rows);
+    res.json({ data: result.rows });
+  } catch (error) {
+    console.error("Database query failed:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
