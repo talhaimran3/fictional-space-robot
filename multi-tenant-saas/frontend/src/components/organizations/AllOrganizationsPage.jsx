@@ -1,56 +1,42 @@
- 
 // multi-tenant-saas/frontend/src/pages/Admin/AllOrganizationsPage.jsx
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  Building2,
+  Search,
+  Users,
+  UserCheck,
+  CalendarDays,
+  Clock3,
+  ArrowRight,
+} from "lucide-react";
+
 import apiClient from "../../../api/client.js";
 import "./AllOrganizationsPage.css";
+import { useCompanies } from "../../../hooks/useCompanies.js";
 
 const AllOrganizationsPage = () => {
-  const [organizations, setOrganizations] = useState([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { companies, loading, error } = useCompanies();
 
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        setLoading(true);
-        setError(null);
 
-        const res = await apiClient.get("/admin/companies/all" ,{
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json"
-          },
-        });
+  const filteredOrganizations = companies.filter((organization) => {
+    const query = search.toLowerCase().trim();
 
-        setOrganizations(res.data.data || []);
-      } catch (err) {
-        setError(
-          err?.response?.data?.message ||
-            err.message ||
-            "Failed to load organizations",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!query) return true;
 
-    fetchOrganizations();
-  }, []);
-
-  const filteredOrganizations = organizations.filter((organization) =>
-    organization.name
-      ?.toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+    return (
+      organization.name?.toLowerCase().includes(query) ||
+      organization.slug?.toLowerCase().includes(query)
+    );
+  });
 
   if (loading) {
     return (
       <div className="organizations-page">
         <div className="page-status">
-          Loading organizations...
+          Loading companies...
         </div>
       </div>
     );
@@ -68,34 +54,70 @@ const AllOrganizationsPage = () => {
 
   return (
     <div className="organizations-page">
-      {/* Page Header */}
+      {/* =========================
+          PAGE HEADER
+      ========================= */}
+
       <div className="page-header">
         <div>
+          <span className="page-eyebrow">
+            TENANTS
+          </span>
+
           <h1>Organizations</h1>
 
           <p>
-            Manage and monitor all organizations.
+            Manage and monitor all organizations
+            on your platform.
           </p>
         </div>
 
         <div className="organization-total">
-          {organizations.length} Organizations
+          <strong>{companies.length}</strong>
+
+          <span>
+            {companies.length === 1
+              ? "Company"
+              : "Companies"}
+          </span>
         </div>
       </div>
 
-      {/* Search */}
+      {/* =========================
+          SEARCH
+      ========================= */}
+
       <div className="organization-toolbar">
-        <input
-          type="text"
-          placeholder="Search organizations..."
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+        <div className="search-wrapper">
+          <Search size={17} />
+
+          <input
+            type="text"
+            placeholder="Search organizations..."
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
+          />
+
+          {search && (
+            <span className="search-count">
+              {filteredOrganizations.length}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Organizations */}
+      {/* =========================
+          ORGANIZATION LIST
+      ========================= */}
+
       {filteredOrganizations.length === 0 ? (
         <div className="empty-state">
+          <div className="empty-icon">
+            <Building2 size={22} />
+          </div>
+
           <h3>No organizations found</h3>
 
           <p>
@@ -106,75 +128,100 @@ const AllOrganizationsPage = () => {
         </div>
       ) : (
         <div className="organizations-list">
-          {filteredOrganizations.map((organization) => (
-            <div
-              key={organization.id}
-              className="organization-card"
-            >
-              {/* Organization Information */}
-              <div className="organization-main">
-                <div className="organization-icon">
-                  🏢
+          {companies.map(
+            (organization) => (
+              <article
+                key={organization.id}
+                className="organization-card"
+              >
+                {/* Organization */}
+
+                <div className="organization-main">
+                  <div className="organization-icon">
+                    <Building2 size={20} />
+                  </div>
+
+                  <div className="organization-details">
+                    <h2>{organization.name}</h2>
+
+                    <span>
+                      {organization.slug}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="organization-details">
-                  <h2>{organization.name}</h2>
+                {/* Statistics */}
 
-                  <span>
-                    {organization.slug}
-                  </span>
+                <div className="organization-stats">
+                  <OrganizationStat
+                    icon={Users}
+                    label="Employees"
+                    value={
+                      organization.employeeCount ?? 0
+                    }
+                  />
+
+                  <OrganizationStat
+                    icon={UserCheck}
+                    label="Active Employees"
+                    value={
+                      organization.activeEmployees ?? 0
+                    }
+                  />
+
+                  <OrganizationStat
+                    icon={CalendarDays}
+                    label="Shifts"
+                    value={
+                      organization.shiftCount ?? 0
+                    }
+                  />
+
+                  <OrganizationStat
+                    icon={Clock3}
+                    label="Today"
+                    value={
+                      organization.todayShiftCount ?? 0
+                    }
+                  />
                 </div>
-              </div>
 
-              {/* Organization Statistics */}
-              <div className="organization-stats">
-                <div className="stat">
-                  <span>Employees</span>
+                {/* Action */}
 
-                  <strong>
-                    {organization.employeeCount ?? 0}
-                  </strong>
+                <div className="organization-action">
+                  <Link
+                    to={`/org/all/${organization.id}`}
+                    className="view-button"
+                  >
+                    <span>View</span>
+                    <ArrowRight size={15} />
+                  </Link>
                 </div>
-
-                <div className="stat">
-                  <span>Active Employees</span>
-
-                  <strong>
-                    {organization.activeEmployees ?? 0}
-                  </strong>
-                </div>
-
-                <div className="stat">
-                  <span>Shifts</span>
-
-                  <strong>
-                    {organization.shiftCount ?? 0}
-                  </strong>
-                </div>
-
-                <div className="stat">
-                  <span>Today</span>
-
-                  <strong>
-                    {organization.todayShiftCount ?? 0}
-                  </strong>
-                </div>
-              </div>
-
-              {/* View Organization */}
-              <div className="organization-action">
-                <Link
-                
-                  to={`/org/all/${organization.id}`}
-                  className="view-button"
-                >
-                  View →
-                </Link>
-              </div>
-            </div>
-          ))}
+              </article>
+            ),
+          )}
         </div>
       )}
+    </div>
+  );
+};
+
+const OrganizationStat = ({
+  icon: Icon,
+  label,
+  value,
+}) => {
+  return (
+    <div className="organization-stat">
+      <div className="organization-stat-icon">
+        <Icon size={15} />
+      </div>
+
+      <div className="organization-stat-content">
+        <span>{label}</span>
+
+        <strong>{value}</strong>
+      </div>
     </div>
   );
 };
