@@ -1,6 +1,7 @@
 // fictional-space-robot/multi-tenant-saas/frontend/src/admin/DeveloperPortal.jsx
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -24,6 +25,7 @@ import { useCompanies } from "../../hooks/useCompanies";
 import { useUsers } from "../../hooks/useUsers";
 import { useShifts } from "../../hooks/useShifts";
 import AllOrganizationsPage from "../components/organizations/AllOrganizationsPage";
+import { HealthDashboard } from "../../api/HealthDashboard";
 
 // Adjust this import path to wherever your component actually lives.
 
@@ -75,6 +77,7 @@ const SYSTEM_ITEMS = [
 
 const DeveloperPortal = () => {
   const [activePage, setActivePage] = useState("dashboard");
+  const [selectedSystemItem, setSelectedSystemItem] = useState("apiHealth");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { companies = [] } = useCompanies();
@@ -87,6 +90,16 @@ const DeveloperPortal = () => {
 
   const handleNavigation = (page) => {
     setActivePage(page);
+    setMobileMenuOpen(false);
+
+    if (page === "system") {
+      setSelectedSystemItem("apiHealth");
+    }
+  };
+
+  const handleSystemNavigation = (itemId) => {
+    setSelectedSystemItem(itemId);
+    setActivePage("system");
     setMobileMenuOpen(false);
   };
 
@@ -307,23 +320,104 @@ const DeveloperPortal = () => {
      SYSTEM
   ========================= */
 
-  const renderSystem = () => (
-    <div className="page-heading">
-      <div>
-        <span className="page-eyebrow">
-          INFRASTRUCTURE
-        </span>
+ const renderSystem = () => {
+  switch (selectedSystemItem) {
+    case "apiHealth":
+      return (
+        <>
+          <div className="page-heading">
+            <div>
+              <span className="page-eyebrow">
+                INFRASTRUCTURE
+              </span>
 
-        <h1>System</h1>
+              <h1>API Health</h1>
 
-        <p>
-          Monitor platform infrastructure and
-          services.
-        </p>
-      </div>
-    </div>
-  );
+              <p>
+                Monitor the health and availability
+                of the application API.
+              </p>
+            </div>
+          </div>
 
+          <HealthDashboard />
+        </>
+      );
+
+    case "database":
+      return (
+        <div className="page-heading">
+          <div>
+            <span className="page-eyebrow">
+              INFRASTRUCTURE
+            </span>
+
+            <h1>Database</h1>
+
+            <p>
+              Monitor PostgreSQL database status.
+            </p>
+          </div>
+        </div>
+      );
+
+    case "redis":
+      return (
+        <div className="page-heading">
+          <div>
+            <span className="page-eyebrow">
+              INFRASTRUCTURE
+            </span>
+
+            <h1>Redis</h1>
+
+            <p>
+              Monitor Redis connection and cache
+              performance.
+            </p>
+          </div>
+        </div>
+      );
+
+    case "jobs":
+      return (
+        <div className="page-heading">
+          <div>
+            <span className="page-eyebrow">
+              INFRASTRUCTURE
+            </span>
+
+            <h1>Background Jobs</h1>
+
+            <p>
+              Monitor queues and background jobs.
+            </p>
+          </div>
+        </div>
+      );
+
+    case "errors":
+      return (
+        <div className="page-heading">
+          <div>
+            <span className="page-eyebrow">
+              INFRASTRUCTURE
+            </span>
+
+            <h1>Errors</h1>
+
+            <p>
+              Monitor application errors and
+              failures.
+            </p>
+          </div>
+        </div>
+      );
+
+    default:
+      return null;
+  }
+};
   /* =========================
      CONTENT
   ========================= */
@@ -358,11 +452,10 @@ const DeveloperPortal = () => {
       {/* SIDEBAR */}
 
       <aside
-        className={`developer-sidebar ${
-          mobileMenuOpen
+        className={`developer-sidebar ${mobileMenuOpen
             ? "mobile-open"
             : ""
-        }`}
+          }`}
       >
         <div className="sidebar-brand">
           <div className="brand-logo">
@@ -401,11 +494,10 @@ const DeveloperPortal = () => {
             return (
               <button
                 key={item.id}
-                className={`navigation-button ${
-                  activePage === item.id
+                className={`navigation-button ${activePage === item.id
                     ? "active"
                     : ""
-                }`}
+                  }`}
                 onClick={() =>
                   handleNavigation(item.id)
                 }
@@ -427,22 +519,27 @@ const DeveloperPortal = () => {
                 SYSTEM
               </span>
 
-              {SYSTEM_ITEMS.map((item) => {
-                const Icon = item.icon;
+           {SYSTEM_ITEMS.map((item) => {
+  const Icon = item.icon;
 
-                return (
-                  <button
-                    key={item.id}
-                    className="navigation-button secondary"
-                  >
-                    <Icon size={16} />
+  return (
+    <button
+      key={item.id}
+      className={`navigation-button secondary ${
+        selectedSystemItem === item.id ? "active" : ""
+      }`}
+      onClick={() =>
+        handleSystemNavigation(item.id)
+      }
+    >
+      <Icon size={16} />
 
-                    <span>
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
+      <span>
+        {item.label}
+      </span>
+    </button>
+  );
+})}
             </div>
           )}
         </nav>

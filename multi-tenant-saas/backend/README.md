@@ -14,5 +14,5 @@ Postgres Error Codes to Handle:
 <!-- instructions to udpate or commit changes to repository to main branch -->
 
 git add .
-git  commit -m "feat: add input validation and error handling for database constraints"
+git  commit -m "did few edits"
 git push origin main

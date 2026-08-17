@@ -11,7 +11,7 @@ dotenv.config();
 export const getAllCompanies = async (req, res) => {
   try {
     const queryText = `
-      SELECT id, name, slug,created_at
+      SELECT id, name, slug,created_at , organization_members,shifts
       FROM organizations
       ORDER BY created_at DESC;
     `;

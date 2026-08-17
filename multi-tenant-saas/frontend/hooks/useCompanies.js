@@ -17,7 +17,7 @@ export const useCompanies = () => {
             "Content-Type": "application/json",
           },
         });
-        console.log('fetched compies : ', res.data.data)
+        console.log('fetched companies : ', res.data.data)
         setCompanies(res.data.data || []);
       } catch (error) {
         setError("Error fetching companies");

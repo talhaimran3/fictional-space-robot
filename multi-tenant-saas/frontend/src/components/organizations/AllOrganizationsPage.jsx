@@ -157,7 +157,7 @@ const AllOrganizationsPage = () => {
                     icon={Users}
                     label="Employees"
                     value={
-                      organization.employeeCount ?? 0
+                      organization.organization_members ?? 0
                     }
                   />
 
@@ -173,7 +173,7 @@ const AllOrganizationsPage = () => {
                     icon={CalendarDays}
                     label="Shifts"
                     value={
-                      organization.shiftCount ?? 0
+                      organization.shifts.length ?? 0
                     }
                   />
 
