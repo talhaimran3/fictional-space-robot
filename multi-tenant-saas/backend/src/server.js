@@ -7,6 +7,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import cors from "cors";
 import db from "./config/database.js";
+import { authenticateToken } from "./middleware/auth.middleware.js";
+import { basicRLS } from "./middleware/rls.middleware.js";
 dotenv.config();
 
 const app = express();
@@ -46,15 +48,65 @@ app.get("/", async (req, res) => {
 });
 
 // Health Route
-app.get("/health", async (req, res) => {
+// import { Redis } from 'ioredis'; // or 'redis' depending on your package
+// import { db } from './db'; // Your existing database module
+
+// Initialize your redis client instance somewhere accessible
+// const redis = new Redis(process.env.REDIS_URL); 
+
+app.get("/api/health-check", async (req, res) => {
+  const healthCheck = {
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(), // Node.js process uptime in seconds
+    services: {
+      api: { status: "up" },
+      postgres: { status: "down", latency_ms: null },
+      redis: { status: "down" },
+    },
+    system: {
+      memoryUsage: process.memoryUsage(),
+    }
+  };
+
   try {
-    const result = await db.query("SELECT NOW()");
-    console.log(result);
-    res.json({ status: "ok", time: result.rows[0].now });
-  } catch (err) {
-    res.status(500).json({ error: err });
+    // 1. Test PostgreSQL Connection & Calculate Latency
+    const dbStartTime = performance.now();
+    const dbResult = await db.query("SELECT NOW();");
+    const dbEndTime = performance.now();
+    
+    healthCheck.services.postgres.status = "up";
+    healthCheck.services.postgres.latency_ms = Math.round(dbEndTime - dbStartTime);
+    
+  } catch (dbError) {
+    healthCheck.status = "unhealthy";
+    healthCheck.services.postgres.status = "down";
+    healthCheck.services.postgres.error = dbError.message;
   }
+
+  // try {
+  //   // 2. Test Redis Cluster/Server Connection using PING
+  //   const redisStatus = await redis.ping();
+  //   if (redisStatus === "PONG") {
+  //     healthCheck.services.redis.status = "up";
+  //   } else {
+  //     throw new Error("Redis did not return PONG");
+  //   }
+  // } catch (redisError) {
+  //   healthCheck.status = "unhealthy";
+  //   healthCheck.services.redis.status = "down";
+  //   healthCheck.services.redis.error = redisError.message;
+  // }
+
+  // 3. Return correct HTTP status codes depending on dependencies
+  if (healthCheck.status === "unhealthy") {
+    // 503 Service Unavailable allows load balancers (AWS ELB/Nginx) to know the app is failing
+    return res.status(503).json(healthCheck);
+  }
+
+  return res.status(200).json(healthCheck);
 });
+
 // Main ROUTES
 app.use("/api/companies", companyRoutes);
 app.use("/api/shifts", shiftRoutes);

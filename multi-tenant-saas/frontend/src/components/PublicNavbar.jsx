@@ -58,11 +58,7 @@ export default function PublicNavbar() {
                   Developer Portal
                 </Link>
               </button>
-                  <button className="btn-secondary">
-                  <Link to="/org/all" className="btn-secondary">
-                  Organization List
-                </Link>
-              </button>
+               
                 <button onClick={handleLogout} className="btn-secondary">
                 
                 Log Out

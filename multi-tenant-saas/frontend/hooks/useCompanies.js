@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export const useCompanies = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -13,10 +14,13 @@ export const useCompanies = () => {
         const res = await apiClient.get("/admin/companies/all", {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
-      setCompanies(res.data.data || []);
+        console.log('fetched companies : ', res.data.data)
+        setCompanies(res.data.data || []);
       } catch (error) {
+        setError("Error fetching companies");
         console.error("Error fetching companies:", error);
       } finally {
         setLoading(false);
@@ -28,5 +32,5 @@ export const useCompanies = () => {
     }
   }, [token]);
 
-  return { companies, loading };
+  return { companies, loading, error };
 };

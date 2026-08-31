@@ -21,9 +21,21 @@ export const addCompany = async (req, res) => {
 export const getAllCompanies = async (req, res) => {
   try {
     const queryText = `
-      SELECT id, name, slug,created_at
-      FROM organizations
-      ORDER BY created_at DESC;
+      SELECT 
+        o.id, 
+        o.name, 
+        o.slug, 
+        o.created_at,
+        COALESCE(
+          (SELECT json_agg(om.*) FROM organization_members om WHERE om.organization_id = o.id), 
+          '[]'::json
+        ) AS organization_members,
+        COALESCE(
+          (SELECT json_agg(s.*) FROM shifts s WHERE s.organization_id = o.id), 
+          '[]'::json
+        ) AS shifts
+      FROM organizations o
+      ORDER BY o.created_at DESC;
     `;
 
     const { rows } = await db.query(queryText);
@@ -35,6 +47,7 @@ export const getAllCompanies = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 export const getAllUsers = async (req, res) => {
   try {
     const queryText = `
@@ -45,7 +58,7 @@ organization_id, email, created_at , platform_role
     `;
 
     const result = await db.query(queryText);
-    console.log("Fetched users:", result.rows);
+    console.log("Fetched users:", result.rows.map((row) => row.name));
     res.json({ data: result.rows });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -61,7 +74,7 @@ export const getAllShifts = async (req, res) => {
     `;
 
     const result = await db.query(queryText);
-    console.log("Fetched shifts:", result.rows);
+    // console.log("Fetched shifts:", result.rows);
     res.json({ data: result.rows });
   } catch (error) {
     console.error("Database query failed:", error);

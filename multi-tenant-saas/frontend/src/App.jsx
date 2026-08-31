@@ -14,6 +14,7 @@ import { SingleOrganizationPage } from "./components/organizations/singleOrganiz
 import { AddShiftForm } from "./components/shifts/AddShiftForm";
 import { EditShiftForm } from "./components/shifts/EditShiftForm";
 import DeveloperPortal from "./admin/DeveloperPortal";
+import { HealthDashboard } from "../api/HealthDashboard";
 
 // // Authenticated Application Portals
 // import DeveloperAdminPortal from './components/DeveloperAdminPortal';
@@ -30,6 +31,8 @@ export default function App() {
         <Routes>
           {/* Public Website Routes */}
           <Route path="/" element={<LandingPage />} />
+                    <Route path="/admin/apihealth" element={<HealthDashboard />} />
+
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/features" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />

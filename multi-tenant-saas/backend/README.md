@@ -11,8 +11,8 @@ Postgres Error Codes to Handle:
 23503 -> 400 Bad Request (Foreign key violation, e.g., assigning a branch to a non-existent tenant).
 
 22P02 -> 400 Bad Request (Invalid data type, e.g., bad UUID string).
-
+<!-- instructions to udpate or commit changes to repository to main branch -->
 
 git add .
-git commit 'new change'
+git  commit -m "did few edits"
 git push origin main
