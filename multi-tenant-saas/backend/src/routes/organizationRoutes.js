@@ -1,10 +1,10 @@
-//multi-tenant-saas/backend/src/routes/companyRoutes.js
+//multi-tenant-saas/backend/src/routes/organizationRoutes.js
 import Router from "express";
 import { resolveTenant } from "../middleware/resolveTenantMidlleware.js";
 import {
-  getAllCompanies,
-  getCompanyById,
-} from "../controllers/companyController.js";
+  getAllorganizations,
+  getorganizationById,
+} from "../controllers/organizationController.js";
 import {
   addShifts,
   deleteShift,
@@ -19,9 +19,9 @@ const router = Router();
 
 // Apply the tenant protection middleware specifically to these routes
 // router.use(resolveTenant);
-router.get("/all", authenticateToken, basicRLS, getAllCompanies);
+router.get("/all", authenticateToken, basicRLS, getAllorganizations);
 
-router.get("/:id", getCompanyById);
+router.get("/:id", getorganizationById);
 router.get("/:id/all-shifts", getShifts);
 
 router.post("/:id/add-shift", addShifts);

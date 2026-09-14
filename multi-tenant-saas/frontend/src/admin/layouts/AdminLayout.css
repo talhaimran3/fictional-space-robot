@@ -1,0 +1,12 @@
+/* multi-tenant-saas/frontend/src/layouts/AdminLayout.css */
+
+.admin-layout {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.admin-main {
+  /* Push content below the fixed top navbar (70px) */
+  padding-top: 70px;
+  min-height: calc(100vh - 70px);
+}

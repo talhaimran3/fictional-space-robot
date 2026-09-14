@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaRegBuilding ,FaExternalLinkAlt } from "react-icons/fa";
-import { LuClock3 } from "react-icons/lu";
-
+import {
+  Building2,
+  ExternalLink,
+  Clock3,
+  LayoutGrid,
+  List,
+  Search,
+} from "lucide-react";
 
 import apiClient from "../../../api/client.js";
 import "./AllOrganizationsShifts.css";
@@ -13,35 +18,43 @@ export const AllOrganizationsShifts = () => {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState("list"); // list groups by org; grid is flatter
 
   useEffect(() => {
     async function fetchAllData() {
       try {
         setLoading(true);
         setError(null);
-
         const res = await apiClient.get("/shifts/all");
-
         setOrganizations(res.data.data || []);
       } catch (err) {
         setError(
           err?.response?.data?.message ||
             err.message ||
-            "Failed to fetch organizations",
+            "Failed to fetch organizations"
         );
       } finally {
         setLoading(false);
       }
     }
-
     fetchAllData();
   }, []);
 
+  const filtered = organizations.filter((org) => {
+    const q = search.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      org.name?.toLowerCase().includes(q) ||
+      String(org.id).includes(q)
+    );
+  });
+
   if (loading) {
     return (
-      <div className="organizations-page">
-        <div className="status-card">
-          <div className="loading-spinner"></div>
+      <div className="aos-page">
+        <div className="aos-status">
+          <div className="aos-spinner" />
           <p>Loading organizations & schedules...</p>
         </div>
       </div>
@@ -50,8 +63,8 @@ export const AllOrganizationsShifts = () => {
 
   if (error) {
     return (
-      <div className="organizations-page">
-        <div className="status-card error-card">
+      <div className="aos-page">
+        <div className="aos-status aos-status--error">
           <h3>Unable to load organizations</h3>
           <p>{error}</p>
         </div>
@@ -60,126 +73,135 @@ export const AllOrganizationsShifts = () => {
   }
 
   return (
-    <div className="organizations-page">
-      {/* Page Header */}
-      <div className="page-header">
+    <div className="aos-page">
+      {/* Header */}
+      <header className="aos-header">
         <div>
-          <p className="page-eyebrow">ADMIN OVERVIEW</p>
-
-          <h1>Organizations</h1>
-
-          <p className="page-description">
-            View all tenants and their scheduled shifts.
+          <p className="aos-eyebrow">Admin overview</p>
+          <h1>Organizations & Shifts</h1>
+          <p className="aos-desc">
+            View all tenants and their scheduled shifts in one place.
           </p>
         </div>
 
-        <div className="organization-summary">
-          <FaRegBuilding size={20} />
+        <div className="aos-summary">
+          <Building2 size={20} />
           <div>
             <strong>{organizations.length}</strong>
             <span>Organizations</span>
           </div>
         </div>
+      </header>
+
+      {/* Toolbar */}
+      <div className="aos-toolbar">
+        <div className="aos-search">
+          <Search size={17} className="aos-search__icon" />
+          <input
+            type="text"
+            placeholder="Search organizations..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="aos-view-toggle">
+          <button
+            type="button"
+            className={`aos-view-btn ${viewMode === "list" ? "is-active" : ""}`}
+            onClick={() => setViewMode("list")}
+            title="Grouped list"
+          >
+            <List size={18} />
+          </button>
+          <button
+            type="button"
+            className={`aos-view-btn ${viewMode === "grid" ? "is-active" : ""}`}
+            onClick={() => setViewMode("grid")}
+            title="Compact grid"
+          >
+            <LayoutGrid size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Empty State */}
-      {organizations.length === 0 ? (
-        <div className="empty-state">
-          <FaRegBuilding size={42} />
-
+      {/* Content */}
+      {filtered.length === 0 ? (
+        <div className="aos-empty">
+          <Building2 size={36} />
           <h3>No organizations found</h3>
-
           <p>
-            There are currently no organizations available to display.
+            {search
+              ? "Try a different search term."
+              : "There are currently no organizations available."}
           </p>
         </div>
-      ) : (
-        <div className="organizations-list">
-          {organizations.map((org) => (
-            <section key={org.id} className="organization-card">
-              {/* Organization Header */}
-              <div className="organization-header">
-                <div className="organization-info">
-                  <div className="organization-icon">
-                    <FaRegBuilding size={22} />
+      ) : viewMode === "list" ? (
+        <div className="aos-list">
+          {filtered.map((org) => (
+            <section key={org.id} className="aos-org-card">
+              <div className="aos-org-header">
+                <div className="aos-org-info">
+                  <div className="aos-org-icon">
+                    <Building2 size={20} />
                   </div>
-
                   <div>
                     <h2>{org.name}</h2>
-
                     <p>
                       Tenant ID: <span>{org.id}</span>
                     </p>
                   </div>
                 </div>
 
-                <div className="organization-actions">
-                  <div className="shift-count">
-                    <LuClock3 size={16} />
-
+                <div className="aos-org-actions">
+                  <div className="aos-shift-count">
+                    <Clock3 size={15} />
                     <span>
-                      {org.shifts.length}{" "}
-                      {org.shifts.length === 1 ? "Shift" : "Shifts"}
+                      {org.shifts?.length ?? 0}{" "}
+                      {(org.shifts?.length ?? 0) === 1 ? "Shift" : "Shifts"}
                     </span>
                   </div>
-
                   <Link
                     to={`/singletenant/${org.id}`}
-                    className="view-tenant-button"
+                    className="aos-view-btn-link"
                   >
-                    View Tenant
-                    <FaExternalLinkAlt size={15} />
+                    View tenant
+                    <ExternalLink size={14} />
                   </Link>
                 </div>
               </div>
 
-              {/* Organization Shifts */}
-              <div className="organization-content">
-                {org.shifts.length === 0 ? (
-                  <div className="no-shifts">
-                    <LuClock3 size={20} />
-
+              <div className="aos-org-body">
+                {!org.shifts || org.shifts.length === 0 ? (
+                  <div className="aos-no-shifts">
+                    <Clock3 size={18} />
                     <div>
                       <strong>No shifts scheduled</strong>
-                      <p>
-                        This organization currently has no assigned shifts.
-                      </p>
+                      <p>This organization currently has no assigned shifts.</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="shift-grid">
+                  <div className="aos-shift-grid">
                     {org.shifts.map((shift) => (
-                      <article key={shift.id} className="shift-card">
-                        <div className="shift-card-header">
+                      <article key={shift.id} className="aos-shift-card">
+                        <div className="aos-shift-card__head">
                           <div>
-                            <span className="shift-label">SHIFT</span>
-
-                            <h3>
-                              {shift.name || "Scheduled Shift"}
-                            </h3>
+                            <span className="aos-label">Shift</span>
+                            <h3>{shift.name || "Scheduled Shift"}</h3>
                           </div>
-
-                          <span className="shift-status">Scheduled</span>
+                          <span className="aos-status-pill">Scheduled</span>
                         </div>
-
-                        <div className="shift-times">
-                          <div className="shift-time">
-                            <span>START</span>
-
+                        <div className="aos-shift-times">
+                          <div>
+                            <span>Start</span>
                             <strong>
-                              {new Date(
-                                shift.start_time,
-                              ).toLocaleString()}
+                              {new Date(shift.start_time).toLocaleString()}
                             </strong>
                           </div>
-
-                          <div className="shift-time">
-                            <span>END</span>
-
+                          <div>
+                            <span>End</span>
                             <strong>
-                              {new Date(
-                                shift.end_time,
-                              ).toLocaleString()}
+                              {new Date(shift.end_time).toLocaleString()}
                             </strong>
                           </div>
                         </div>
@@ -189,6 +211,33 @@ export const AllOrganizationsShifts = () => {
                 )}
               </div>
             </section>
+          ))}
+        </div>
+      ) : (
+        /* Compact grid: one card per org with shift count */
+        <div className="aos-compact-grid">
+          {filtered.map((org) => (
+            <article key={org.id} className="aos-compact-card">
+              <div className="aos-compact-card__icon">
+                <Building2 size={22} />
+              </div>
+              <h2>{org.name}</h2>
+              <p className="aos-compact-card__id">ID: {org.id}</p>
+              <div className="aos-compact-card__meta">
+                <Clock3 size={14} />
+                <span>
+                  {org.shifts?.length ?? 0}{" "}
+                  {(org.shifts?.length ?? 0) === 1 ? "shift" : "shifts"}
+                </span>
+              </div>
+              <Link
+                to={`/singletenant/${org.id}`}
+                className="aos-compact-card__link"
+              >
+                View tenant
+                <ExternalLink size={13} />
+              </Link>
+            </article>
           ))}
         </div>
       )}

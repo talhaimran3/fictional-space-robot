@@ -14,13 +14,13 @@ export const addShifts = async (req, res) => {
     const { id: organization_id } = req.params;
 
     // 2. Extract shift details from the request body
-    const { name, start_time, end_time } = req.body;
+    const { employee_id, title, start_time, end_time, status, notes } = req.body;
 
     // 3. Simple validation rules
-    if (!name || !start_time || !end_time) {
+    if (!employee_id || !title || !start_time || !end_time) {
       return res.status(400).json({
         error:
-          "Missing required fields: name, start_time, and end_time are required.",
+          "Missing required fields: employee_id, title, start_time, and end_time are required.",
       });
     }
 
@@ -31,19 +31,26 @@ export const addShifts = async (req, res) => {
       });
     }
 
-    // 5. Construct the dynamic database insertion query text
+    // 5. Insert the shift and return all shift details
     const queryText = `
-      INSERT INTO shifts (organization_id, name, start_time, end_time)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, organization_id, name, start_time, end_time, created_at;
+      INSERT INTO shifts (
+        organization_id, employee_id, title, start_time, end_time, status, notes
+      )
+      VALUES ($1, $2, $3, $4, $5, COALESCE($6, 'scheduled'), $7)
+      RETURNING
+        id, organization_id, employee_id, title, start_time, end_time,
+        status, notes, created_at, updated_at;
     `;
 
     // 6. Execute the query using parameterized arrays
     const { rows } = await db.query(queryText, [
       organization_id,
-      name,
+      employee_id,
+      title,
       start_time,
       end_time,
+      status,
+      notes,
     ]);
 
     // 7. Return the created shift object back to the client
@@ -65,7 +72,7 @@ export const addShifts = async (req, res) => {
   }
 };
 
-export const getCompaniesWithShifts = async (req, res, next) => {
+export const getorganizationsWithShifts = async (req, res, next) => {
   try {
     const query = `
       SELECT 
@@ -82,12 +89,12 @@ export const getCompaniesWithShifts = async (req, res, next) => {
 
     const { rows } = await db.query(query);
 
-    // Group shifts under their respective company
-    const companiesMap = {};
+    // Group shifts under their respective organization
+    const organizationsMap = {};
 
     rows.forEach((row) => {
-      if (!companiesMap[row.organization_id]) {
-        companiesMap[row.organization_id] = {
+      if (!organizationsMap[row.organization_id]) {
+        organizationsMap[row.organization_id] = {
           id: row.organization_id,
           name: row.organization_name,
           shifts: [],
@@ -95,7 +102,7 @@ export const getCompaniesWithShifts = async (req, res, next) => {
       }
 
       if (row.shift_id) {
-        companiesMap[row.organization_id].shifts.push({
+        organizationsMap[row.organization_id].shifts.push({
           id: row.shift_id,
           name: row.shift_name,
           start_time: row.start_time,
@@ -104,17 +111,15 @@ export const getCompaniesWithShifts = async (req, res, next) => {
       }
     });
 
-    res.json({ data: Object.values(companiesMap) });
+    res.json({ data: Object.values(organizationsMap) });
   } catch (error) {
     next(error);
   }
 };
 export const getShifts = async (req, res, next) => {
   try {
-    // 1. Extract the organization ID from the route path parameters
     const { id: organization_id } = req.params;
 
-    // 2. Safety check to make sure an ID was provided
     if (!organization_id) {
       return res.status(400).json({
         error: "Bad Request: Organization ID parameter is required.",
@@ -123,20 +128,30 @@ export const getShifts = async (req, res, next) => {
 
     const queryText = `
       SELECT
-        id,
-        name,
-        start_time,
-        end_time,
-        created_at
-      FROM shifts
-      WHERE organization_id = $1
-      ORDER BY start_time ASC;
+        s.id,
+        s.organization_id,
+        s.employee_id,
+        s.title,
+        s.start_time,
+        s.end_time,
+        s.total_hours,          -- generated column, safe to select
+        s.status,
+        s.notes,
+        s.created_at,
+        s.updated_at,
+        e.employee_code,
+        e.role AS employee_role,
+        u.name AS employee_name,
+        u.email AS employee_email
+      FROM shifts s
+      LEFT JOIN employees e ON e.id = s.employee_id
+      LEFT JOIN users u ON u.id = e.user_id
+      WHERE s.organization_id = $1
+      ORDER BY s.start_time ASC;
     `;
 
-    // 3. Query the database using the parameter from req.params
     const result = await db.query(queryText, [organization_id]);
 
-    // 4. Return the data using your standardized 'data' structure
     res.json({
       status: "success",
       results: result.rowCount,
@@ -148,7 +163,6 @@ export const getShifts = async (req, res, next) => {
       error,
     );
 
-    // Handle invalid UUID string formats smoothly
     if (error.code === "22P02") {
       return res
         .status(400)
@@ -158,6 +172,7 @@ export const getShifts = async (req, res, next) => {
     next(error);
   }
 };
+
 export const getShiftById = async (req, res, next) => {
   try {
     const { id: organization_id, shiftId } = req.params;
@@ -171,13 +186,25 @@ export const getShiftById = async (req, res, next) => {
 
     const queryText = `
       SELECT
-        id,
-        name,
-        start_time,
-        end_time,
-        created_at
-      FROM shifts
-      WHERE id = $1 AND organization_id = $2;
+        s.id,
+        s.organization_id,
+        s.employee_id,
+        s.title,
+        s.start_time,
+        s.end_time,
+        s.total_hours,
+        s.status,
+        s.notes,
+        s.created_at,
+        s.updated_at,
+        e.employee_code,
+        e.role AS employee_role,
+        u.name AS employee_name,
+        u.email AS employee_email
+      FROM shifts s
+      LEFT JOIN employees e ON e.id = s.employee_id
+      LEFT JOIN users u ON u.id = e.user_id
+      WHERE s.id = $1 AND s.organization_id = $2;
     `;
 
     const result = await db.query(queryText, [shiftId, organization_id]);
@@ -208,23 +235,28 @@ export const getShiftById = async (req, res, next) => {
     next(error);
   }
 };
+
 export const updateShift = async (req, res, next) => {
   try {
-    // 1. Extract parameters from the route URL
     const { id: organization_id, shiftId: shift_id } = req.params;
 
-    // 2. Extract values from the request body payload
-    const { name, start_time, end_time } = req.body;
+    const {
+      title,
+      employee_id,
+      start_time,
+      end_time,
+      status,
+      notes,
+    } = req.body;
 
-    // 3. Validation: Ensure all fields are provided
-    if (!name || !start_time || !end_time) {
+    // Validation
+    if (!title || !start_time || !end_time) {
       return res.status(400).json({
         error:
-          "Bad Request: name, start_time, and end_time are required fields.",
+          "Bad Request: title, start_time, and end_time are required fields.",
       });
     }
 
-    // 4. Validation: Check chronological order of timestamps
     if (new Date(start_time) >= new Date(end_time)) {
       return res.status(400).json({
         error:
@@ -232,26 +264,43 @@ export const updateShift = async (req, res, next) => {
       });
     }
 
-    // 5. Query execution targeting both shift identity and organization boundary
+    // IMPORTANT: Do NOT update total_hours — it is a generated column
     const queryText = `
       UPDATE shifts
       SET 
-        name = $1,
-        start_time = $2,
-        end_time = $3
-      WHERE id = $4 AND organization_id = $5
-      RETURNING id, organization_id, name, start_time, end_time, created_at;
+        employee_id = COALESCE($1, employee_id),
+        title       = $2,
+        start_time  = $3,
+        end_time    = $4,
+        status      = COALESCE($5, status),
+        notes       = $6,
+        updated_at  = NOW()
+      WHERE id = $7 AND organization_id = $8
+      RETURNING
+        id,
+        organization_id,
+        employee_id,
+        title,
+        start_time,
+        end_time,
+        total_hours,      -- will be automatically recalculated
+        status,
+        notes,
+        created_at,
+        updated_at;
     `;
 
     const result = await db.query(queryText, [
-      name,
+      employee_id || null,
+      title,
       start_time,
       end_time,
+      status || null,
+      notes || null,
       shift_id,
       organization_id,
     ]);
 
-    // 6. Verification: Check if record exists under this organization scope
     if (result.rows.length === 0) {
       return res.status(404).json({
         error:
@@ -259,22 +308,27 @@ export const updateShift = async (req, res, next) => {
       });
     }
 
-    // 7. Success Payload Distribution
     return res.status(200).json({
       status: "success",
-      message: "Shift timeline updated successfully.",
+      message: "Shift updated successfully.",
       data: result.rows[0],
     });
   } catch (error) {
     console.error(
-      `Failed to update shift ${req.params?.shiftId} for company ${req.params?.id}:`,
+      `Failed to update shift ${req.params?.shiftId} for organization ${req.params?.id}:`,
       error,
     );
 
-    // Graceful exception tracking for invalid database variable definitions
     if (error.code === "22P02") {
       return res.status(400).json({
         error: "Invalid identity formatting: UUID syntax mismatch detected.",
+      });
+    }
+
+    // Helpful error if someone still tries to write to the generated column
+    if (error.code === "428C9") {
+      return res.status(400).json({
+        error: "Cannot manually update total_hours. It is calculated automatically.",
       });
     }
 

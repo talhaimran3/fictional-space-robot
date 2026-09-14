@@ -1,47 +1,97 @@
--make addedit form modal for shifts companies 
+-make addedit form modal for shifts organizations 
 -make the endpoints for all the admin portals required for developer.
+-now the add the database UI and canva https://reactflow.dev/examples/overview to make the tables rows and columns
+    best is to show the database in ui for add delete or edit columns or rows and to link with foreign keys using visuals
 
-
-for developer we will need : 
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ Organizations   │ │ Total Employees │ │ Active Shifts   │ │ Today's Shifts  │
-│      24         │ │      1,284      │ │       86        │ │      214        │
-└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────┘
-But first we will build and complete the following
-Developer / Platform Admin
+AUTH
 │
-├── Dashboard
+├── login
+├── register
+├── refresh token
+└── logout
+
+ORGANIZATIONS
+│
+├── create
+├── list
+├── get
+├── update
+└── delete
+
+MEMBERS
+│
+├── invite
+├── list
+├── update role
+└── remove
+
+EMPLOYEES
+│
+├── create
+├── list
+├── get
+├── update
+└── delete
+
+SHIFTS
+│
+├── create
+├── list
+├── get
+├── update
+├── delete
+└── publish
+
+DEVELOPER
+│
+├── dashboard
+├── organizations
+├── system
+└── database
+      ├── list tables
+      └── inspect table
+
+
+      SHIFT MANAGEMENT SaaS
+│
+├── Authentication
+│   ├── Register
+│   ├── Login
+│   ├── Refresh Token
+│   └── Logout
+│
+├── Multi-Tenancy
 │   ├── Organizations
-│   ├── Employees
-│   ├── Active Shifts
-│   ├── Today's Shifts
-│   └── System Status
+│   ├── Members
+│   └── Tenant Isolation
 │
-├── Organizations
-│   ├── Search
-│   ├── Organization
-│   ├── Employees
-│   ├── Active Employees
-│   ├── Shifts
-│   └── Today's Shifts
+├── Employees
+│   ├── Create
+│   ├── List
+│   ├── Update
+│   └── Delete
 │
-├── Organization
-│   ├── Overview
-│   ├── Employees
-│   ├── Shifts
-│   ├── Schedule
-│   └── Activity
+├── Shifts
+│   ├── Create
+│   ├── List
+│   ├── Update
+│   ├── Delete
+│   └── Assign Employee
 │
-└── System
-    ├── API Health
-    ├── Database
-    ├── Redis
-    ├── Jobs
-    └── Errors
-
-[Certain] For your current stage, I'd implement only these four dashboard numbers:
-
-Organizations
-Employees
-Active Shifts
-Today's Shifts
+├── Authorization
+│   ├── Owner
+│   ├── Manager
+│   └── Scheduler
+│
+├── Database
+│   ├── PostgreSQL
+│   ├── Foreign Keys
+│   ├── Constraints
+│   ├── Indexes
+│   └── Transactions
+│
+└── Developer Portal
+    ├── Dashboard
+    ├── Organizations
+    ├── System
+    └── Read-only DB Inspector

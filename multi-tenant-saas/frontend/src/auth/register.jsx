@@ -31,9 +31,9 @@ export default function Register() {
       }
     } catch (err) {
       // Show error message from backend or a fallback message
-      setError(
-        err.response?.data?.message ||
-          "Something went wrong. Please try again.",
+      console.log(
+        err ||
+        "Something went wrong. Please try again.",
       );
     }
   };

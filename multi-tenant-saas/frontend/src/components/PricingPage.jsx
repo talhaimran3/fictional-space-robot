@@ -10,7 +10,7 @@ export default function PricingPage() {
           Simple, Transparent Pricing
         </h1>
         <p style={{ color: "#64748b" }}>
-          Choose the tier that matches your company scale.
+          Choose the tier that matches your organization scale.
         </p>
       </section>
 

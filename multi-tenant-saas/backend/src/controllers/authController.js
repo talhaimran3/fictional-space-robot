@@ -9,13 +9,14 @@ export const registerUser = async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password || !name)
     return res.status(400).json({ error: "Missing required fields" });
-  console.log("Registering user with email:", email);
-  try {
+  console.log("Registering user with email:", email , password, name);
+  try { 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await db.query(
       "INSERT INTO users (email, password, name) VALUES ($1, $2, $3) RETURNING id, email, name",
       [email, hashedPassword, name],
     );
+    console.log("User registered successfully:", result.rows[0]);
     console.log("User registered:", email);
     res
       .status(201)
@@ -29,6 +30,7 @@ export const registerUser = async (req, res) => {
 };
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  console.log("Logging in user with email:", email, password);
   if (!email || !password)
     return res.status(400).json({ error: "Missing email or password" });
 
@@ -42,8 +44,9 @@ export const loginUser = async (req, res) => {
     const user = result.rows[0];
     console.log("User found for login:", user);
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+    console.log("Password match:", isMatch);
 
+    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
       expiresIn: "1h",
     });

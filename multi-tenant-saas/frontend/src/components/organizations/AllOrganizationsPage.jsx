@@ -1,6 +1,6 @@
-// multi-tenant-saas/frontend/src/pages/Admin/AllOrganizationsPage.jsx
+// multi-tenant-saas/frontend/src/components/organizations/AllOrganizationsPage.jsx
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Building2,
@@ -10,33 +10,65 @@ import {
   CalendarDays,
   Clock3,
   ArrowRight,
+  LayoutGrid,
+  List,
+  Plus,
+  Pencil,
 } from "lucide-react";
 
-import apiClient from "../../../api/client.js";
 import "./AllOrganizationsPage.css";
-import { useCompanies } from "../../../hooks/useCompanies.js";
+import { useOrganizations } from "../../../hooks/useOrganizations.js";
+import { AddEditFormModal } from "./AddEditFormModal.jsx";
 
 const AllOrganizationsPage = () => {
   const [search, setSearch] = useState("");
-  const { companies, loading, error } = useCompanies();
+  const [viewMode, setViewMode] = useState("grid");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingOrg, setEditingOrg] = useState(null);
 
+  const { organizations, loading, error, refetch } = useOrganizations();
 
-  const filteredOrganizations = companies.filter((organization) => {
+  const openCreate = () => {
+    setEditingOrg(null);
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (org) => {
+    setEditingOrg(org);
+    setIsModalOpen(true);
+  };
+
+  const handleSuccess = () => {
+    if (refetch) refetch();
+  };
+
+  const filteredOrganizations = organizations.filter((organization) => {
     const query = search.toLowerCase().trim();
-
     if (!query) return true;
-
     return (
       organization.name?.toLowerCase().includes(query) ||
       organization.slug?.toLowerCase().includes(query)
     );
   });
 
+  const getEmployeeCount = (org) => {
+    if (Array.isArray(org.employees)) return org.employees.length;
+    return org.organization_members ?? org.employeeCount ?? 0;
+  };
+
+  const getActiveEmployeeCount = (org) => {
+    if (Array.isArray(org.employees)) {
+      return org.employees.filter((emp) => emp.status === "active").length;
+    }
+    return org.activeEmployees ?? 0;
+  };
+
   if (loading) {
     return (
-      <div className="organizations-page">
-        <div className="page-status">
-          Loading companies...
+      <div className="orgs-page">
+        <div className="orgs-loading">
+          <div className="orgs-spinner" />
+          <p>Loading organizations...</p>
         </div>
       </div>
     );
@@ -44,186 +76,227 @@ const AllOrganizationsPage = () => {
 
   if (error) {
     return (
-      <div className="organizations-page">
-        <div className="page-status error">
-          {error}
+      <div className="orgs-page">
+        <div className="orgs-error">
+          <p>{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="organizations-page">
-      {/* =========================
-          PAGE HEADER
-      ========================= */}
-
-      <div className="page-header">
-        <div>
-          <span className="page-eyebrow">
-            TENANTS
-          </span>
-
+    <div className="orgs-page">
+      {/* Header */}
+      <header className="orgs-header">
+        <div className="orgs-header__left">
+          <span className="orgs-eyebrow">Tenants</span>
           <h1>Organizations</h1>
-
-          <p>
-            Manage and monitor all organizations
-            on your platform.
-          </p>
+          <p>Manage and monitor all organizations on your platform.</p>
         </div>
 
-        <div className="organization-total">
-          <strong>{companies.length}</strong>
-
-          <span>
-            {companies.length === 1
-              ? "Company"
-              : "Companies"}
-          </span>
+        <div className="orgs-header__right">
+          <div className="orgs-total-pill">
+            <strong>{organizations.length}</strong>
+            <span>
+              {organizations.length === 1 ? "organization" : "organizations"}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="orgs-btn orgs-btn--primary"
+            onClick={openCreate}
+          >
+            <Plus size={18} />
+            Add Organization
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* =========================
-          SEARCH
-      ========================= */}
-
-      <div className="organization-toolbar">
-        <div className="search-wrapper">
-          <Search size={17} />
-
+      {/* Toolbar */}
+      <div className="orgs-toolbar">
+        <div className="orgs-search">
+          <Search size={17} className="orgs-search__icon" />
           <input
             type="text"
-            placeholder="Search organizations..."
+            placeholder="Search by name or slug..."
             value={search}
-            onChange={(event) =>
-              setSearch(event.target.value)
-            }
+            onChange={(e) => setSearch(e.target.value)}
           />
-
           {search && (
-            <span className="search-count">
+            <span className="orgs-search__count">
               {filteredOrganizations.length}
             </span>
           )}
         </div>
+
+        <div className="orgs-view-toggle">
+          <button
+            type="button"
+            className={`orgs-view-btn ${viewMode === "grid" ? "is-active" : ""}`}
+            onClick={() => setViewMode("grid")}
+            title="Grid view"
+          >
+            <LayoutGrid size={18} />
+          </button>
+          <button
+            type="button"
+            className={`orgs-view-btn ${viewMode === "list" ? "is-active" : ""}`}
+            onClick={() => setViewMode("list")}
+            title="List view"
+          >
+            <List size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* =========================
-          ORGANIZATION LIST
-      ========================= */}
-
+      {/* Content */}
       {filteredOrganizations.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon">
-            <Building2 size={22} />
+        <div className="orgs-empty">
+          <div className="orgs-empty__icon">
+            <Building2 size={28} />
           </div>
-
           <h3>No organizations found</h3>
-
           <p>
             {search
               ? "Try a different search term."
               : "There are currently no organizations."}
           </p>
-        </div>
-      ) : (
-        <div className="organizations-list">
-          {companies.map(
-            (organization) => (
-              <article
-                key={organization.id}
-                className="organization-card"
-              >
-                {/* Organization */}
-
-                <div className="organization-main">
-                  <div className="organization-icon">
-                    <Building2 size={20} />
-                  </div>
-
-                  <div className="organization-details">
-                    <h2>{organization.name}</h2>
-
-                    <span>
-                      {organization.slug}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Statistics */}
-
-                <div className="organization-stats">
-                  <OrganizationStat
-                    icon={Users}
-                    label="Employees"
-                    value={
-                      organization.organization_members ?? 0
-                    }
-                  />
-
-                  <OrganizationStat
-                    icon={UserCheck}
-                    label="Active Employees"
-                    value={
-                      organization.activeEmployees ?? 0
-                    }
-                  />
-
-                  <OrganizationStat
-                    icon={CalendarDays}
-                    label="Shifts"
-                    value={
-                      organization.shifts.length ?? 0
-                    }
-                  />
-
-                  <OrganizationStat
-                    icon={Clock3}
-                    label="Today"
-                    value={
-                      organization.todayShiftCount ?? 0
-                    }
-                  />
-                </div>
-
-                {/* Action */}
-
-                <div className="organization-action">
-                  <Link
-                    to={`/org/all/${organization.id}`}
-                    className="view-button"
-                  >
-                    <span>View</span>
-                    <ArrowRight size={15} />
-                  </Link>
-                </div>
-              </article>
-            ),
+          {!search && (
+            <button
+              type="button"
+              className="orgs-btn orgs-btn--primary"
+              onClick={openCreate}
+            >
+              <Plus size={16} />
+              Add first organization
+            </button>
           )}
         </div>
+      ) : viewMode === "grid" ? (
+        <div className="orgs-grid">
+          {filteredOrganizations.map((org) => (
+            <article key={org.id} className="org-card">
+              <div className="org-card__top">
+                <div className="org-card__icon">
+                  <Building2 size={22} />
+                </div>
+                <div className="org-card__meta">
+                  <h2>{org.name}</h2>
+                  <span className="org-card__slug">{org.slug}</span>
+                </div>
+                <button
+                  type="button"
+                  className="org-card__edit"
+                  onClick={() => openEdit(org)}
+                  title="Edit organization"
+                >
+                  <Pencil size={15} />
+                </button>
+              </div>
+
+              <div className="org-card__stats">
+                <OrgStat
+                  icon={Users}
+                  label="Employees"
+                  value={getEmployeeCount(org)}
+                />
+                <OrgStat
+                  icon={UserCheck}
+                  label="Active"
+                  value={getActiveEmployeeCount(org)}
+                />
+                <OrgStat
+                  icon={CalendarDays}
+                  label="Shifts"
+                  value={org.shifts?.length ?? org.shiftCount ?? 0}
+                />
+                <OrgStat
+                  icon={Clock3}
+                  label="Today"
+                  value={org.todayShiftCount ?? 0}
+                />
+              </div>
+
+              <Link
+                to={`/admin/org/all/${org.id}`}
+                className="org-card__action"
+              >
+                View details
+                <ArrowRight size={15} />
+              </Link>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="orgs-list">
+          {filteredOrganizations.map((org) => (
+            <article key={org.id} className="org-row">
+              <div className="org-row__main">
+                <div className="org-row__icon">
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <h2>{org.name}</h2>
+                  <span>{org.slug}</span>
+                </div>
+              </div>
+
+              <div className="org-row__stats">
+                <span>
+                  <Users size={14} /> {getEmployeeCount(org)} employees
+                </span>
+                <span>
+                  <CalendarDays size={14} />{" "}
+                  {org.shifts?.length ?? org.shiftCount ?? 0} shifts
+                </span>
+                <span>
+                  <Clock3 size={14} /> {org.todayShiftCount ?? 0} today
+                </span>
+              </div>
+
+              <div className="org-row__actions">
+                <button
+                  type="button"
+                  className="orgs-btn orgs-btn--ghost"
+                  onClick={() => openEdit(org)}
+                  title="Edit"
+                >
+                  <Pencil size={14} />
+                  Edit
+                </button>
+                <Link
+                  to={`/admin/org/all/${org.id}`}
+                  className="orgs-btn orgs-btn--ghost"
+                >
+                  View
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
+
+      <AddEditFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        organization={editingOrg}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 };
 
-const OrganizationStat = ({
-  icon: Icon,
-  label,
-  value,
-}) => {
-  return (
-    <div className="organization-stat">
-      <div className="organization-stat-icon">
-        <Icon size={15} />
-      </div>
-
-      <div className="organization-stat-content">
-        <span>{label}</span>
-
-        <strong>{value}</strong>
-      </div>
+const OrgStat = ({ icon: Icon, label, value }) => (
+  <div className="org-stat">
+    <div className="org-stat__icon">
+      <Icon size={14} />
     </div>
-  );
-};
+    <div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  </div>
+);
 
 export default AllOrganizationsPage;

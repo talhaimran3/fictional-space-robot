@@ -1,0 +1,216 @@
+css
+
+/* --- RESET & VARIABLES --- */
+:root {
+  --bg-primary: #ffffff;
+  --bg-surface: #f8f9fa;
+  --text-main: #1a1a1a;
+  --text-muted: #666666;
+  --accent-color: #000000;
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --blur-amount: 8px;
+  --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+/* --- TOP NAVBAR --- */
+.top-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  transition: var(--transition-smooth);
+}
+
+/* Glassmorphism effect when page scrolls */
+.top-navbar.scrolled {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+}
+
+.nav-container {
+    width: 100%;
+    /* max-width: 1200px; */
+    /* margin: 0 auto; */
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-logo {
+  text-decoration: none;
+  color: var(--text-main);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.desktop-links {
+  display: flex;
+  gap: 32px;
+}
+
+.desktop-links a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
+  transition: var(--transition-smooth);
+}
+
+.desktop-links a:hover {
+  color: var(--accent-color);
+}
+
+.menu-toggle-btn, .close-toggle-btn, .icon-btn-desktop {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: var(--transition-smooth);
+}
+
+.menu-toggle-btn:hover, .close-toggle-btn:hover, .icon-btn-desktop:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Hide hamburger menu button on desktop */
+.menu-toggle-btn {
+  display: none;
+}
+
+/* --- SIDEBAR DRAWERS & OVERLAYS --- */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--overlay-bg);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: -320px; /* Fully hidden offscreen */
+  width: 300px;
+  height: 100%;
+  background-color: var(--bg-primary);
+  z-index: 201;
+  box-shadow: 20px 0 40px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  transition: var(--transition-smooth);
+}
+
+.sidebar-drawer.open {
+  left: 0; /* Slides in cleanly */
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.sidebar-logo {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-links a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--text-main);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: var(--transition-smooth);
+}
+
+.sidebar-links a:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding-left: 20px; /* Subtle organic pull effect on hover */
+}
+
+.sidebar-divider {
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.06);
+  margin: 16px 0;
+}
+
+/* --- MAIN BODY INTERACTION --- */
+.main-content {
+    padding: 48px 0px 0px;
+    /* max-width: 1245px; */
+    margin: 0 auto;
+}
+  .menu-toggle-btn {
+    display: flex;
+  }
+.main-content h1 {
+  font-size: 32px;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+/* --- RESPONSIVE MOBILE OVERRIDES --- */
+@media (max-width: 768px) {
+  .desktop-links, .icon-btn-desktop {
+    display: none;
+  }
+  
+  .menu-toggle-btn {
+    display: flex;
+  }
+}
