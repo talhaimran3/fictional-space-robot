@@ -19,7 +19,7 @@ export default function AdminDashboard() {
     const stats = {
         organizations: organizations.length,
         employees: organizations.reduce(
-            (sum, org) => sum + (org.organization_members || org.employees || 0),
+            (sum, org) => sum + (org.members || org.employees || 0),
             0
         ),
         shifts: organizations.reduce(

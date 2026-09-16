@@ -1,32 +1,41 @@
-// controllers/memberController.js
-
 import db from "../config/database.js";
 
 export const getMembers = async (req, res) => {
-  const organizationId = req.organization.id;
+  // Prefer the authenticated organization from middleware
+  const organizationId = req.organization?.id || req.params.organizationId;
 
-  const { rows } = await db.query(
-    `
+  if (!organizationId) {
+    return res.status(400).json({
+      success: false,
+      message: "Organization ID is required.",
+    });
+  }
+
+  try {
+    const { rows } = await db.query(
+      `
       SELECT
-        u.id,
-        u.name,
-        u.email,
-        om.role,
-        om.created_at
-      FROM organization_members om
+        id,
+        full_name AS name,
+        email,
+        role,
+        created_at
+      FROM users
+      WHERE organization_id = $1
+      ORDER BY full_name ASC
+      `,
+      [organizationId]
+    );
 
-      INNER JOIN users u
-        ON u.id = om.user_id
-
-      WHERE om.organization_id = $1
-
-      ORDER BY u.name ASC
-    `,
-    [organizationId]
-  );
-
-  res.json({
-    success: true,
-    members: rows,
-  });
+    res.json({
+      success: true,
+      members: rows,
+    });
+  } catch (error) {
+    console.error("Error fetching members:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch members.",
+    });
+  }
 };

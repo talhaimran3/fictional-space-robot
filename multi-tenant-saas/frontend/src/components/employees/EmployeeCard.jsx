@@ -11,12 +11,12 @@ import {
 } from "lucide-react";
 
 const EmployeeCard = ({ employee, onEdit }) => {
-  const name = employee.user?.name || "Unnamed";
-  const email = employee.user?.email || "No email";
+  const name = employee.full_name || "Unnamed";
+  const email = employee.email || "No email";
   const organizationName = employee.organization?.name || "—";
-  const role = employee.employee_role || "staff";
-  const status = employee.employee_status || "active";
-  const shifts = employee.shifts || [];
+  const role = employee.role || "staff";
+  const status = employee.status || "active";
+  const shifts = Array.isArray(employee.shifts) ? employee.shifts : [];
 
   const avatarLetter = name.charAt(0).toUpperCase();
 

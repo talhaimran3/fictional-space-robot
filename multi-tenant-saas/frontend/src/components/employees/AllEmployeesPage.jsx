@@ -262,7 +262,7 @@ const AllEmployeesPage = () => {
         <div className="emp-grid">
           {filteredEmployees.map((employee) => (
             <EmployeeCard
-              key={employee.employee_id}
+              key={employee.id}
               employee={employee}
               onEdit={openEdit}
             />

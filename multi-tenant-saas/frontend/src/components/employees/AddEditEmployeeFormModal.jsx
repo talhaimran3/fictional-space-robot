@@ -26,7 +26,8 @@ export const AddEditEmployeeFormModal = ({
    * employee.organization_id
    */
 
-  const isEdit = Boolean(employee?.employee_id);
+  const employeeId = employee?.employee_id || employee?.id;
+  const isEdit = Boolean(employeeId);
 
   const { organizations = [] } = useOrganizations();
 
@@ -53,7 +54,9 @@ export const AddEditEmployeeFormModal = ({
     if (employee) {
       setOrganizationId(
         employee.organization_id ||
-        employee.organizationId
+        employee.organizationId ||
+        employee.organization?.id ||
+        ""
       );
 
       setEmployeeCode(
@@ -61,7 +64,9 @@ export const AddEditEmployeeFormModal = ({
       );
 
       setRole(
-        employee.employee_role || "staff"
+        employee.employee_role ||
+        employee.role ||
+        "staff"
       );
 
       setStatus(
@@ -77,15 +82,23 @@ export const AddEditEmployeeFormModal = ({
       );
 
       setName(
-        employee.user?.name || ""
+        employee.user?.name ||
+        employee.full_name ||
+        employee.name ||
+        ""
       );
 
       setEmail(
-        employee.user?.email || ""
+        employee.user?.email ||
+        employee.email ||
+        ""
       );
 
       setUserId(
-        employee.user_id || ""
+        employee.user_id ||
+        employee.user?.id ||
+        employee.id ||
+        ""
       );
     } else {
       setOrganizationId("");
@@ -157,7 +170,7 @@ export const AddEditEmployeeFormModal = ({
         }
 
         const response = await apiClient.put(
-          `/employees/update/${employee.employee_id}`,
+          `/employees/update/${employeeId}`,
           payload
         );
 

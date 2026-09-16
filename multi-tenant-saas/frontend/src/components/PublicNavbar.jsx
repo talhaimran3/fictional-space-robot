@@ -6,7 +6,7 @@ import { useAuth } from "../../context/authContext";
 export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { token ,logout } = useAuth();
+  const { token, logout } = useAuth();
   const navigate = useNavigate();
   const handleLogout = () => {
     logout();
@@ -50,22 +50,26 @@ export default function PublicNavbar() {
             {/* when logged in show logout and viceversa */}
             {token ? (
               <>
-               <button className="btn-secondary">
+                <button className="btn-secondary">
                   <Link to="/admin" className="btn-secondary">
-                  Admin Portal
-                </Link> {""}
+                    Admin Portal
+                  </Link> {""}
+
+                </button>
+                <button className="btn-secondary">
+                  {""}
                   <Link to="/developer" className="btn-secondary">
-                  Developer Portal
-                </Link>
-              </button>
-               
+                    Developer Portal
+                  </Link>
+                </button>
+
                 <button onClick={handleLogout} className="btn-secondary">
-                
-                Log Out
-              </button>
+
+                  Log Out
+                </button>
               </>
 
-            
+
             ) : (
               <>
                 <Link to="/login" className="btn-secondary">

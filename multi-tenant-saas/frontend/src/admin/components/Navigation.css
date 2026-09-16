@@ -131,7 +131,7 @@ body {
   left: -320px; /* Fully hidden offscreen */
   width: 300px;
   height: 100%;
-  background-color: var(--bg-primary);
+  background-color: white;
   z-index: 201;
   box-shadow: 20px 0 40px rgba(0, 0, 0, 0.05);
   display: flex;
