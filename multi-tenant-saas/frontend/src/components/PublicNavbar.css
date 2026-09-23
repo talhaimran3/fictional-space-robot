@@ -64,19 +64,20 @@
   align-items: center;
   gap: 12px;
 }
-
 .btn-secondary {
   text-decoration: none;
+  background: white;
   color: #334155;
   font-weight: 600;
-  padding: 8px 16px;
+  /* padding: 8px; */
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  transition: background-color 0.2s ease;
+  border: 0px solid #cbd5e1;
+  transition: 0.2s ease;
 }
 
 .btn-secondary:hover {
   background-color: #f1f5f9;
+  padding: 8px;
 }
 
 .btn-primary {
@@ -87,7 +88,9 @@
   padding: 8px 18px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-  transition: transform 0.15s ease, background-color 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.2s ease;
 }
 
 .btn-primary:hover {
@@ -122,7 +125,9 @@
   gap: 28px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
 }
 
 .mobile-overlay.open {

@@ -14,7 +14,7 @@ import {
   Clock3,
   CalendarDays,
 } from "lucide-react";
-import apiClient from "../../../api/client.js";
+import apiClient from "../../api/client.js";
 import { AddEditFormModal } from "../../components/organizations/AddEditFormModal.jsx";
 import { AddEditShiftFormModal } from "../../components/shifts/AddEditShiftFormModal.jsx";
 import "./singleOrganizationPage.css";

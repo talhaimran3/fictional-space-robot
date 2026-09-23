@@ -5,11 +5,13 @@ import PricingPage from "../components/PricingPage";
 import Login from "../auth/login";
 import Register from "../auth/register";
 import PublicNavbar from "../components/PublicNavbar";
+import Footer from "../components/Footer";
+
 export const PublicLayout = () => {
   return (
     <>
       <PublicNavbar />
-      <Outlet />
+      <Outlet /> <Footer />
     </>
   );
 };
@@ -22,6 +24,5 @@ export const publicRoutes = (
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
     </Route>
-
   </>
 );

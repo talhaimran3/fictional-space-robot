@@ -1,6 +1,6 @@
 // src/admin/components/SystemViews.jsx
 
-import { HealthDashboard } from "../../../../api/HealthDashboard";
+import { HealthDashboard } from "../../../api/HealthDashboard";
 import DataTable from "../../DataTable";
 
 export function ApiHealthView() {

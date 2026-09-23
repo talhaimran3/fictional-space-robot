@@ -11,7 +11,7 @@ import {
 
 import "./AllEmployeesPage.css";
 
-import { useEmployees } from "../../../hooks/useEmployees.js";
+import { useEmployees } from "../../hooks/useEmployees.js";
 import { AddEditEmployeeFormModal } from "./AddEditEmployeeFormModal.jsx";
 import EmployeeCard from "./EmployeeCard.jsx";
 

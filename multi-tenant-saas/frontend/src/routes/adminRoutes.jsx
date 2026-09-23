@@ -6,7 +6,7 @@ import { AllOrganizationsShifts } from "../components/organizations/AllOrganizat
 import AllOrganizationsPage from "../components/organizations/AllOrganizationsPage";
 import { SingleOrganizationPage } from "../components/organizations/SingleOrganizationPage";
 import DeveloperPortal from "../admin/DeveloperPortal";
-import { HealthDashboard } from "../../api/HealthDashboard";
+import { HealthDashboard } from "../api/HealthDashboard";
 import AdminDashboard from "../admin/components/developerComponents/AdminDashboard";
 import AllEmployeesPage from "../components/employees/AllEmployeesPage";
 

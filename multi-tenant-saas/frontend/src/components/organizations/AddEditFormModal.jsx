@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Building2, X } from "lucide-react";
-import apiClient from "../../../api/client.js";
+import apiClient from "../../api/client.js";
 import "./AddEditFormModal.css";
 
 // Common IANA timezones (you can expand this list later)

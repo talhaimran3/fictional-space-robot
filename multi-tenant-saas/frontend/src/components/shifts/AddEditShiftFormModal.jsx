@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Clock3, X } from "lucide-react";
-import apiClient from "../../../api/client.js";
+import apiClient from "../../api/client.js";
 import "./AddEditShiftFormModal.css";
 
 export const AddEditShiftFormModal = ({

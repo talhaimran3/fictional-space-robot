@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import "./AllOrganizationsPage.css";
-import { useOrganizations } from "../../../hooks/useOrganizations.js";
+import { useOrganizations } from "../../hooks/useOrganizations.js";
 import { AddEditFormModal } from "./AddEditFormModal.jsx";
 
 const AllOrganizationsPage = () => {

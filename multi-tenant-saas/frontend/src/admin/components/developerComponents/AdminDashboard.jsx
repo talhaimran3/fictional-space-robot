@@ -12,7 +12,7 @@ import {
     Plus,
 } from "lucide-react";
 import "./AdminDashboard.css";
-import { useOrganizations } from "../../../../hooks/useOrganizations";
+import { useOrganizations } from "../../../hooks/useOrganizations";
 
 export default function AdminDashboard() {
     const { organizations, loading } = useOrganizations();

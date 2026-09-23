@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./AuthStyles.css";
-import apiClient from "../../api/client.js";
+import apiClient from "../api/client.js";
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

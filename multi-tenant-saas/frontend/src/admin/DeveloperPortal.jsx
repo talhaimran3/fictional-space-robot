@@ -13,9 +13,9 @@ import {
 } from "./components/dashboardComponents/SystemViews";
 import AllOrganizationsPage from "../components/organizations/AllOrganizationsPage";
 
-import { useOrganizations } from "../../hooks/useOrganizations";
-import { useUsers } from "../../hooks/useUsers";
-import { useShifts } from "../../hooks/useShifts";
+import { useOrganizations } from "../hooks/useOrganizations";
+import { useUsers } from "../hooks/useUsers";
+import { useShifts } from "../hooks/useShifts";
 
 import "./DeveloperPortal.css";
 // import DeveloperSidebar from "./components/dashboardComponents/DeveloperSidebar";

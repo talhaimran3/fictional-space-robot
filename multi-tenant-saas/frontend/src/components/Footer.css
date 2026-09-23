@@ -1,0 +1,119 @@
+.site-footer {
+  margin-top: auto;
+  color: #f8fafc;
+  background: #0f172a;
+  text-align: left;
+}
+
+.site-footer-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 64px 24px 32px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) repeat(3, minmax(150px, 1fr));
+  gap: 48px 32px;
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #f8fafc;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.footer-brand-mark {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #0f172a;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.footer-tagline {
+  max-width: 260px;
+  margin-top: 18px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.footer-copyright {
+  margin-top: 40px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.footer-column h2 {
+  margin: 0 0 18px;
+  color: #f8fafc;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.footer-column nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.footer-column nav a {
+  color: #94a3b8;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-column nav a:hover,
+.footer-column nav a:focus-visible {
+  color: #f8fafc;
+}
+
+.footer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.footer-status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+@media (max-width: 800px) {
+  .site-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px 24px;
+  }
+
+  .footer-brand-column {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer-grid {
+    grid-template-columns: 1fr;
+    padding: 48px 20px 28px;
+  }
+
+  .footer-brand-column {
+    grid-column: auto;
+  }
+
+  .footer-copyright {
+    margin-top: 28px;
+  }
+}

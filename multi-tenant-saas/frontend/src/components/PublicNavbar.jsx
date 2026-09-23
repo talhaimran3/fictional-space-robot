@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./PublicNavbar.css";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../context/authContext";
 
 export default function PublicNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

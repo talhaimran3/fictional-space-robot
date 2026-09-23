@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { Users, X } from "lucide-react";
 
-import { useOrganizations } from "../../../hooks/useOrganizations.js";
-import apiClient from "../../../api/client.js";
+import { useOrganizations } from "../../hooks/useOrganizations.js";
+import apiClient from "../../api/client.js";
 
 import "./AddEditEmployeeFormModal.css";
 

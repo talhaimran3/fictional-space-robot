@@ -14,7 +14,7 @@ import {
   Rows3,
   AlertCircle,
 } from "lucide-react";
-import apiClient from "../../api/client.js";
+import apiClient from "../api/client.js";
 import "./DataTable.css";
 
 const EMPTY_DETAILS = { columns: [], rows: [] };

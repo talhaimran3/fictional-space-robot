@@ -11,7 +11,7 @@ import {
   Search,
 } from "lucide-react";
 
-import apiClient from "../../../api/client.js";
+import apiClient from "../../api/client.js";
 import "./AllOrganizationsShifts.css";
 
 export const AllOrganizationsShifts = () => {
