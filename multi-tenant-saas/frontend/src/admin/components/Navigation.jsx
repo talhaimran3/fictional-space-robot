@@ -7,11 +7,15 @@ import {
   Settings,
   User,
   Bell,
+  Users,
+  ClipboardClock,
+  Clock5,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 
 import "./Navigation.css";
+import { BsPeople } from "react-icons/bs";
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -108,24 +112,24 @@ export default function Navigation() {
             to="/explore"
             onClick={closeSidebar}
           >
-            <Compass size={18} />
-            Explore
+            <ClipboardClock size={18} />
+            Shifts
           </Link>
 
           <Link
             to="/notifications"
             onClick={closeSidebar}
           >
-            <Bell size={18} />
-            Notifications
+            <BsPeople size={18} />
+            People
           </Link>
 
           <Link
             to="/profile"
             onClick={closeSidebar}
           >
-            <User size={18} />
-            Profile
+            <Clock5  size={18} />
+            TimeSheets
           </Link>
 
           <div className="sidebar-divider" />
