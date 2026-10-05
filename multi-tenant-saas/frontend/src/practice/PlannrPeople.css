@@ -1,5 +1,40 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* Content-only People page (inside AdminLayout) — CSS vars must live on .pp-page */
+.pp-page,
+.pp-page * {
+  box-sizing: border-box;
+}
+
+.pp-page {
+  --pp-bg-start: #dcebf8;
+  --pp-bg-mid: #eff6ff;
+  --pp-bg-end: #e7eafb;
+  --pp-navy: #24344d;
+  --pp-text: #536781;
+  --pp-muted: #7a8ba3;
+  --pp-blue: #3978ea;
+  --pp-border: rgba(198, 215, 234, 0.5);
+  --pp-white-border: rgba(255, 255, 255, 0.85);
+  --pp-glass: rgba(255, 255, 255, 0.6);
+  --pp-shadow: 0 8px 32px rgba(80, 132, 191, 0.05);
+
+  width: 100%;
+  color: var(--pp-text);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 13px;
+  position: relative;
+}
+
+.pp-page button,
+.pp-page input,
+.pp-page select {
+  font: inherit;
+}
+
+.pp-page button {
+  cursor: pointer;
+}
 
 /* Mobile Backdrop */
 .pp-mobile-backdrop {
