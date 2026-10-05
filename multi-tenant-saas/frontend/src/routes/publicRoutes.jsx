@@ -22,19 +22,21 @@ export const PublicLayout = () => {
 };
 export const publicRoutes = (
   <>
+    {/* Marketing only */}
     <Route element={<PublicLayout />}>
       <Route path="/" element={<LandingPage />} />
-      <Route element={<AdminLayout />}>
-        <Route path="/dashboard" element={<PlannrDashboard />} />
-        <Route path="/shifts" element={<PlannrShifts />} />
-        <Route path="/people" element={<PlannrPeoples />} />
-        <Route path="/timesheets" element={<PlannrTimesheets />} />
-      </Route>
-
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/features" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+    </Route>
+
+    {/* Plannr app shell — no PublicNavbar/Footer */}
+    <Route element={<AdminLayout />}>
+      <Route path="/dashboard" element={<PlannrDashboard />} />
+      <Route path="/shifts" element={<PlannrShifts />} />
+      <Route path="/people" element={<PlannrPeoples />} />
+      <Route path="/timesheets" element={<PlannrTimesheets />} />
     </Route>
   </>
 );

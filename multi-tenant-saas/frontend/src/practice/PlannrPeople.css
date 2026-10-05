@@ -1,44 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-.plannr-peoples,
-.plannr-peoples * {
-  box-sizing: border-box;
-}
-
-.plannr-peoples {
-  --pp-bg-start: #dcebf8;
-  --pp-bg-mid: #eff6ff;
-  --pp-bg-end: #e7eafb;
-  --pp-navy: #24344d;
-  --pp-text: #536781;
-  --pp-muted: #7a8ba3;
-  --pp-blue: #3978ea;
-  --pp-border: rgba(198, 215, 234, 0.5);
-  --pp-white-border: rgba(255, 255, 255, 0.85);
-  --pp-glass: rgba(255, 255, 255, 0.6);
-  --pp-shadow: 0 8px 32px rgba(80, 132, 191, 0.05);
-
-  min-height: 100vh;
-  display: flex;
-  align-items: stretch;
-  background:
-    radial-gradient(circle at 74% 8%, rgba(255,255,255,.58), transparent 31%),
-    linear-gradient(105deg, var(--pp-bg-start) 0%, var(--pp-bg-mid) 48%, var(--pp-bg-end) 100%);
-  color: var(--pp-text);
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 13px;
-  position: relative;
-}
-
-.plannr-peoples button,
-.plannr-peoples input,
-.plannr-peoples select {
-  font: inherit;
-}
-
-.plannr-peoples button {
-  cursor: pointer;
-}
 
 /* Mobile Backdrop */
 .pp-mobile-backdrop {
