@@ -1,5 +1,3 @@
-// src/admin/components/DeveloperDashboard.jsx
-
 import { Building2, Users, CalendarDays, Activity } from "lucide-react";
 import SystemHealthPanel from "./SystemHealthPanel";
 import PlatformActivityPanel from "./PlatformActivityPanel";
@@ -24,12 +22,11 @@ export default function DeveloperDashboard({
         </div>
 
         <div className="system-indicator">
-          <span className="status-dot"></span>
+          <span className="status-dot" />
           All systems operational
         </div>
       </div>
 
-      {/* Stats */}
       <section className="stats-grid">
         <div className="stat-card">
           <div className="stat-card-top">
@@ -69,7 +66,7 @@ export default function DeveloperDashboard({
             <div className="stat-icon">
               <Activity size={19} />
             </div>
-            <span className="stat-label">Today's Shifts</span>
+            <span className="stat-label">Today&apos;s Shifts</span>
           </div>
           <strong className="stat-value">{todaysShifts.length}</strong>
           <span className="stat-description">
@@ -80,7 +77,6 @@ export default function DeveloperDashboard({
         </div>
       </section>
 
-      {/* Panels */}
       <div className="dashboard-grid">
         <SystemHealthPanel />
         <PlatformActivityPanel />

@@ -1,9 +1,7 @@
-// src/admin/DeveloperPortal.jsx
-
 import { useState } from "react";
 import { Menu } from "lucide-react";
-
 import DeveloperDashboard from "./components/dashboardComponents/DeveloperDashboard";
+import DeveloperSidebar from "./components/dashboardComponents/DeveloperSidebar";
 import {
   ApiHealthView,
   DatabaseView,
@@ -12,13 +10,10 @@ import {
   ErrorsView,
 } from "./components/dashboardComponents/SystemViews";
 import AllOrganizationsPage from "../components/organizations/AllOrganizationsPage";
-
 import { useOrganizations } from "../hooks/useOrganizations";
 import { useUsers } from "../hooks/useUsers";
 import { useShifts } from "../hooks/useShifts";
-
 import "./DeveloperPortal.css";
-// import DeveloperSidebar from "./components/dashboardComponents/DeveloperSidebar";
 
 export default function DeveloperPortal() {
   const [activePage, setActivePage] = useState("dashboard");
@@ -77,36 +72,34 @@ export default function DeveloperPortal() {
   };
 
   return (
-    <div className="developer-portal">
+    <div className="sa-dev-portal">
       {mobileMenuOpen && (
-        <div
-          className="mobile-overlay"
-          onClick={() => setMobileMenuOpen(false)}
-        />
+        <div className="sa-dev-overlay" onClick={() => setMobileMenuOpen(false)} />
       )}
 
-      {/* <DeveloperSidebar
+      <DeveloperSidebar
         activePage={activePage}
         selectedSystemItem={selectedSystemItem}
         mobileMenuOpen={mobileMenuOpen}
         onNavigate={handleNavigation}
         onSystemNavigate={handleSystemNavigation}
         onCloseMobile={() => setMobileMenuOpen(false)}
-      /> */}
+      />
 
-      <div className="developer-main">
-        <header className="mobile-header">
+      <div className="sa-dev-main">
+        <header className="sa-dev-mobile-header">
           <button
-            className="mobile-menu-button"
+            type="button"
+            className="sa-dev-menu-btn"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open menu"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
           <strong>Developer Console</strong>
         </header>
 
-        <main className="developer-content">{renderContent()}</main>
+        <main className="sa-dev-content">{renderContent()}</main>
       </div>
     </div>
   );

@@ -1,12 +1,96 @@
-/* multi-tenant-saas/frontend/src/layouts/AdminLayout.css */
+.sa-layout {
+  --sa-navy: #24344d;
+  --sa-text: #536781;
+  --sa-muted: #7a8ba3;
+  --sa-blue: #3978ea;
+  --sa-border: rgba(198, 215, 234, 0.55);
+  --sa-glass: rgba(255, 255, 255, 0.72);
+  --sa-shadow: 0 10px 32px rgba(80, 132, 191, 0.07);
+  --sa-sidebar-w: 248px;
 
-.admin-layout {
   min-height: 100vh;
-  background-color: #f8f9fa;
+  display: flex;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--sa-text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.85), transparent 28%),
+    linear-gradient(180deg, #f5f9ff 0%, #eef5fb 100%);
 }
 
-.admin-main {
-  /* Push content below the fixed top navbar (70px) */
-  padding-top: 70px;
-  min-height: calc(100vh - 70px);
+.sa-layout-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.sa-topbar {
+  min-height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--sa-border);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.sa-topbar-menu {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.sa-topbar-menu span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sa-navy);
+}
+
+.sa-topbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sa-topbar-title strong {
+  color: var(--sa-navy);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sa-topbar-title span {
+  color: var(--sa-muted);
+  font-size: 11px;
+}
+
+.sa-layout-content {
+  flex: 1;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .sa-topbar-menu {
+    display: flex;
+  }
+
+  .sa-layout-content {
+    padding: 16px;
+  }
 }

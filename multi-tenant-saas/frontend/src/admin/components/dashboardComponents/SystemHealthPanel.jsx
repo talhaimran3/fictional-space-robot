@@ -1,5 +1,3 @@
-// src/admin/components/SystemHealthPanel.jsx
-
 import { CheckCircle2 } from "lucide-react";
 import HealthItem from "./HealthItem";
 

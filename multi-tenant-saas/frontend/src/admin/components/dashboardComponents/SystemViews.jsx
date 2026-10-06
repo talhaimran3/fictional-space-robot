@@ -1,5 +1,3 @@
-// src/admin/components/SystemViews.jsx
-
 import { HealthDashboard } from "../../../api/HealthDashboard";
 import DataTable from "../../DataTable";
 

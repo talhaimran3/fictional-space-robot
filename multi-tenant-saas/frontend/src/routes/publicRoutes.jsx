@@ -2,6 +2,7 @@
 import { Route, Outlet } from "react-router-dom";
 import LandingPage from "../components/LandingPage";
 import PricingPage from "../components/PricingPage";
+import FeaturesPage from "../components/FeaturesPage";
 import Login from "../auth/login";
 import Register from "../auth/register";
 import PublicNavbar from "../components/PublicNavbar";
@@ -11,19 +12,20 @@ import PlannrPeoples from "../practice/PlannrPeople";
 import PlannrDashboard from "../practice/PlannrDashboard";
 import PlannrTimesheets from "../practice/Timesheets";
 import AdminLayout from "../practice/AdminLayout";
-import FeaturesPage from "../components/FeaturesPage";
 
 export const PublicLayout = () => {
   return (
     <>
       <PublicNavbar />
-      <Outlet /> <Footer />
+      <Outlet />
+      <Footer />
     </>
   );
 };
+
 export const publicRoutes = (
   <>
-    {/* Marketing only */}
+    {/* Marketing + auth — PublicNavbar + Footer */}
     <Route element={<PublicLayout />}>
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingPage />} />
@@ -32,7 +34,7 @@ export const publicRoutes = (
       <Route path="/register" element={<Register />} />
     </Route>
 
-    {/* Plannr app shell — no PublicNavbar/Footer */}
+    {/* Plannr practice app — sidebar/topbar only, no public chrome */}
     <Route element={<AdminLayout />}>
       <Route path="/dashboard" element={<PlannrDashboard />} />
       <Route path="/shifts" element={<PlannrShifts />} />

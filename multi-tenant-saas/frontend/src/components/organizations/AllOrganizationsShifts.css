@@ -1,3 +1,5 @@
+/* ShiftPulse accent overrides */
+:root { --accent: #3978ea; --navy: #24344d; --muted: #7a8ba3; }
 /* AllOrganizationsShifts.css — modern overview of all tenants + shifts */
 
 .aos-page {

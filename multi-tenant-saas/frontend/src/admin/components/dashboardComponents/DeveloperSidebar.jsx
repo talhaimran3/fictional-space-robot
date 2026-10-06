@@ -1,5 +1,3 @@
-// src/admin/components/DeveloperSidebar.jsx
-
 import {
   LayoutDashboard,
   Building2,
@@ -35,35 +33,32 @@ export default function DeveloperSidebar({
   onCloseMobile,
 }) {
   return (
-    <aside
-      className={`developer-sidebar ${mobileMenuOpen ? "mobile-open" : ""}`}
-    >
-      <div className="sidebar-brand">
-        <div className="brand-logo">⚡</div>
+    <aside className={`sa-dev-sidebar ${mobileMenuOpen ? "is-open" : ""}`}>
+      <div className="sa-dev-brand">
+        <div className="sa-dev-logo">S</div>
         <div>
           <strong>Developer Console</strong>
           <span>Platform Admin</span>
         </div>
         <button
-          className="mobile-close-button"
+          type="button"
+          className="sa-dev-close"
           onClick={onCloseMobile}
           aria-label="Close menu"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
       </div>
 
-      <nav className="sidebar-navigation">
-        <span className="navigation-label">MAIN</span>
-
+      <nav className="sa-dev-nav">
+        <span className="sa-dev-label">MAIN</span>
         {NAVIGATION.map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.id}
-              className={`navigation-button ${
-                activePage === item.id ? "active" : ""
-              }`}
+              type="button"
+              className={`sa-dev-btn ${activePage === item.id ? "is-active" : ""}`}
               onClick={() => onNavigate(item.id)}
             >
               <Icon size={18} />
@@ -73,15 +68,16 @@ export default function DeveloperSidebar({
         })}
 
         {activePage === "system" && (
-          <div className="system-navigation">
-            <span className="navigation-label">SYSTEM</span>
+          <div className="sa-dev-system">
+            <span className="sa-dev-label">SYSTEM</span>
             {SYSTEM_ITEMS.map((item) => {
               const Icon = item.icon;
               return (
                 <button
                   key={item.id}
-                  className={`navigation-button secondary ${
-                    selectedSystemItem === item.id ? "active" : ""
+                  type="button"
+                  className={`sa-dev-btn is-secondary ${
+                    selectedSystemItem === item.id ? "is-active" : ""
                   }`}
                   onClick={() => onSystemNavigate(item.id)}
                 >
@@ -94,13 +90,11 @@ export default function DeveloperSidebar({
         )}
       </nav>
 
-      <div className="sidebar-footer">
-        <div className="developer-status">
-          <span className="status-dot"></span>
-          <div>
-            <strong>Platform Online</strong>
-            <span>v1.0.0</span>
-          </div>
+      <div className="sa-dev-footer">
+        <span className="sa-status-dot" />
+        <div>
+          <strong>Platform Online</strong>
+          <span>v1.0.0</span>
         </div>
       </div>
     </aside>

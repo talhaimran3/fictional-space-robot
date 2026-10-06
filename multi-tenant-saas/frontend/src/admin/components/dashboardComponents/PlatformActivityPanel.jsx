@@ -1,5 +1,3 @@
-// src/admin/components/PlatformActivityPanel.jsx
-
 import ActivityItem from "./ActivityItem";
 
 export default function PlatformActivityPanel() {

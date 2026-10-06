@@ -1,3 +1,5 @@
+/* ShiftPulse accent overrides */
+:root { --accent: #3978ea; --navy: #24344d; --muted: #7a8ba3; }
 /* multi-tenant-saas/frontend/src/pages/SingleOrganizationPage/singleOrganizationPage.css */
 
 .sop-page {

@@ -1,11 +1,9 @@
-// multi-tenant-saas/frontend/src/components/organizations/AddEditFormModal.jsx
-
 import { useState, useEffect } from "react";
-import { Building2, X } from "lucide-react";
+import { Building2 } from "lucide-react";
 import apiClient from "../../api/client.js";
-import "./AddEditFormModal.css";
+import ModalShell from "../../admin/shared/ModalShell";
+import "../../admin/shared/admin-ui.css";
 
-// Common IANA timezones (you can expand this list later)
 const TIMEZONES = [
   "UTC",
   "America/New_York",
@@ -36,11 +34,10 @@ const TIMEZONES = [
 export const AddEditFormModal = ({
   isOpen,
   onClose,
-  organization = null, // null = create, object = edit
+  organization = null,
   onSuccess,
 }) => {
   const isEdit = Boolean(organization?.id);
-
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [timezone, setTimezone] = useState("UTC");
@@ -76,8 +73,6 @@ export const AddEditFormModal = ({
   const handleNameChange = (event) => {
     const value = event.target.value;
     setName(value);
-
-    // Auto-suggest slug only on create
     if (!isEdit && (!slug || slug === slugify(name))) {
       setSlug(slugify(value));
     }
@@ -86,12 +81,10 @@ export const AddEditFormModal = ({
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
-
     if (!name.trim() || !slug.trim()) {
       setError("Organization name and slug are required.");
       return;
     }
-
     setLoading(true);
     try {
       const payload = {
@@ -100,7 +93,6 @@ export const AddEditFormModal = ({
         timezone: timezone || "UTC",
         status: status || "active",
       };
-
       let response;
       if (isEdit) {
         response = await apiClient.put(
@@ -110,11 +102,9 @@ export const AddEditFormModal = ({
       } else {
         response = await apiClient.post("/admin/create-tenant", payload);
       }
-
       onSuccess?.(response.data.data);
       onClose();
-    //   refresh the page
-        window.location.reload();
+      window.location.reload();
     } catch (requestError) {
       setError(
         requestError.response?.data?.error ||
@@ -125,114 +115,88 @@ export const AddEditFormModal = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="add-edit-org-modal"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        <button
-          type="button"
-          className="modal-close-btn"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X size={18} />
-        </button>
-
-        <div className="add-org-icon">
-          <Building2 size={26} />
-        </div>
-
-        <h2 className="add-org-title">
-          {isEdit ? "Edit Organization" : "Add New Organization"}
-        </h2>
-        <p className="add-org-desc">
-          {isEdit
-            ? "Update the organization details below."
-            : "Fill in the details to add a new tenant."}
-        </p>
-
-        <form onSubmit={handleSubmit} className="add-org-form">
-          <label htmlFor="organization-name">
-            Organization name <span className="required">*</span>
-            <input
-              id="organization-name"
-              type="text"
-              value={name}
-              onChange={handleNameChange}
-              placeholder="Example Organization"
-              autoFocus
-              required
-            />
-          </label>
-
-          <label htmlFor="organization-slug">
-            Organization slug <span className="required">*</span>
-            <input
-              id="organization-slug"
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="example-organization"
-              required
-            />
-          </label>
-
-          <label htmlFor="organization-timezone">
-            Timezone
-            <select
-              id="organization-timezone"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-            >
-              {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label htmlFor="organization-status">
-            Status
-            <select
-              id="organization-status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </label>
-
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="add-org-btn secondary"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="add-org-btn" disabled={loading}>
-              {loading
-                ? isEdit
-                  ? "Updating..."
-                  : "Saving..."
-                : isEdit
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      icon={Building2}
+      title={isEdit ? "Edit Organization" : "Add New Organization"}
+      description={
+        isEdit
+          ? "Update the organization details below."
+          : "Fill in the details to add a new tenant."
+      }
+    >
+      {error && <div className="sa-alert">{error}</div>}
+      <form onSubmit={handleSubmit} className="sa-form">
+        <label htmlFor="organization-name">
+          Organization name <span className="required">*</span>
+          <input
+            id="organization-name"
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+            placeholder="Example Organization"
+            autoFocus
+            required
+          />
+        </label>
+        <label htmlFor="organization-slug">
+          Organization slug <span className="required">*</span>
+          <input
+            id="organization-slug"
+            type="text"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="example-organization"
+            required
+          />
+        </label>
+        <label htmlFor="organization-timezone">
+          Timezone
+          <select
+            id="organization-timezone"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+          >
+            {TIMEZONES.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="organization-status">
+          Status
+          <select
+            id="organization-status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </label>
+        <div className="sa-form-actions">
+          <button
+            type="button"
+            className="sa-btn sa-btn--ghost"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button type="submit" className="sa-btn sa-btn--primary" disabled={loading}>
+            {loading
+              ? isEdit
+                ? "Updating..."
+                : "Saving..."
+              : isEdit
                 ? "Update Organization"
                 : "Create Organization"}
-            </button>
-          </div>
-        </form>
-
-        {error && <div className="add-org-error">{error}</div>}
-      </div>
-    </div>
+          </button>
+        </div>
+      </form>
+    </ModalShell>
   );
 };
