@@ -1,60 +1,52 @@
-// multi-tenant-saas/frontend/src/components/Footer.jsx
 import { Link } from "react-router-dom";
 import "./Footer.css";
 
-const productLinks = [
-  { label: "Home", to: "/" },
-  { label: "Features", to: "/features" },
-  { label: "Smart Rota Builder", to: "/features#smart-rota-builder" },
-  { label: "Geofenced Clock-ins", to: "/features#geofenced-clock-ins" },
-  { label: "Live Labor Budgeting", to: "/features#live-labor-budgeting" },
-  { label: "Pricing", to: "/pricing" },
+const COLUMN_1 = [
+  { label: "Link 1", to: "/" },
+  { label: "Link 2", to: "/features" },
+];
+
+const COLUMN_2 = [
+  { label: "Link 1", to: "/pricing" },
+  { label: "Link 2", to: "/login" },
 ];
 
 export default function Footer() {
   return (
-    <footer className="site-footer">
-      <div className="site-footer-grid">
-        <div className="footer-brand-column">
-          <Link to="/" className="footer-brand">
-            <span className="footer-brand-mark" aria-hidden="true">⚡</span>
+    <footer className="sp-footer">
+      <div className="sp-footer-inner">
+        <div className="sp-footer-brand">
+          <Link to="/" className="sp-footer-logo">
+            <span className="sp-footer-mark">S</span>
             <span>ShiftPulse</span>
           </Link>
-          <p className="footer-tagline">
-            Automated Rota Scheduling built for Multi-Branch Teams
-          </p>
-          <p className="footer-copyright">
+          <p>Workforce scheduling that stays clear under pressure.</p>
+          <p className="sp-footer-copy">
             © {new Date().getFullYear()} ShiftPulse. All rights reserved.
           </p>
         </div>
 
-        <div className="footer-column">
-          <h2>Product</h2>
-          <nav aria-label="Product links">
-            {productLinks.map((link) => (
-              <Link key={link.label} to={link.to}>{link.label}</Link>
-            ))}
-          </nav>
-        </div>
+        <div className="sp-footer-cols">
+          <div className="sp-footer-col">
+            <h3>Column 1</h3>
+            <nav>
+              {COLUMN_1.map((item) => (
+                <Link key={item.label + item.to} to={item.to}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
-        <div className="footer-column">
-          <h2>Portals</h2>
-          <nav aria-label="Portal links">
-            <Link to="/admin">Admin Portal</Link>
-            <Link to="/admin/developer">Developer Portal</Link>
-            <Link to="/admin/apihealth">API Health</Link>
-          </nav>
-        </div>
-
-        <div className="footer-column">
-          <h2>Legal &amp; Social</h2>
-          <nav aria-label="Legal links">
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/terms-of-service">Terms of Service</a>
-          </nav>
-          <div className="footer-status" role="status">
-            <span className="footer-status-dot" aria-hidden="true" />
-            <span>All Systems Operational</span>
+          <div className="sp-footer-col">
+            <h3>Column 2</h3>
+            <nav>
+              {COLUMN_2.map((item) => (
+                <Link key={item.label + item.to} to={item.to}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </div>
       </div>

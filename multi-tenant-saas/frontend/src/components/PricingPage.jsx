@@ -1,95 +1,75 @@
-//multi-tenant-saas/frontend/src/components/PricingPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 import "./PricingPage.css";
+
+const PLANS = [
+  {
+    name: "Starter",
+    price: "—",
+    blurb: "For a single location getting started.",
+    features: ["1 location", "Core scheduling", "Basic timesheets", "Email support"],
+    cta: "Choose Starter",
+    featured: false,
+  },
+  {
+    name: "Pro",
+    price: "—",
+    blurb: "For growing multi-branch teams.",
+    features: ["Multiple locations", "Conflict checks", "Exports", "Priority support"],
+    cta: "Start free trial",
+    featured: true,
+  },
+  {
+    name: "Enterprise",
+    price: "—",
+    blurb: "For larger orgs with custom needs.",
+    features: ["Unlimited locations", "Custom roles", "API access", "Dedicated support"],
+    cta: "Contact sales",
+    featured: false,
+  },
+];
 
 export default function PricingPage() {
   return (
-    <div>
-      <section className="pricing-hero">
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 800 }}>
-          Simple, Transparent Pricing
-        </h1>
-        <p style={{ color: "#64748b" }}>
-          Choose the tier that matches your organization scale.
-        </p>
+    <div className="sp-pricing">
+      <section className="sp-pricing-hero">
+        <h1>Simple, transparent pricing</h1>
+        <p>Plans will be finalized soon — structure is ready for your numbers.</p>
       </section>
 
-      <div className="pricing-grid">
-        {/* Starter Plan */}
-        <div className="pricing-card">
-          <h3>Starter</h3>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-            For single store locations
-          </p>
-          <div className="pricing-amount">
-            $29 <span style={{ fontSize: "1rem", color: "#64748b" }}>/ mo</span>
-          </div>
-          <ul className="pricing-features">
-            <li>✓ 1 Physical Location</li>
-            <li>✓ Up to 15 Employees</li>
-            <li>✓ Weekly Rota Builder</li>
-            <li>✓ Mobile Employee App</li>
-          </ul>
-          <Link
-            to="/register"
-            className="btn-secondary"
-            style={{ textAlign: "center" }}
-          >
-            Choose Starter
-          </Link>
+      <section className="sp-pricing-grid-wrap">
+        <div className="sp-pricing-grid">
+          {PLANS.map((plan) => (
+            <article
+              key={plan.name}
+              className={`sp-pricing-card ${plan.featured ? "is-featured" : ""}`}
+            >
+              {plan.featured && <span className="sp-pricing-badge">Most popular</span>}
+              <h3>{plan.name}</h3>
+              <p className="sp-pricing-blurb">{plan.blurb}</p>
+              <div className="sp-pricing-amount">
+                <span>{plan.price}</span>
+                <small>/ mo</small>
+              </div>
+              <ul className="sp-pricing-features">
+                {plan.features.map((f) => (
+                  <li key={f}>
+                    <Check size={15} strokeWidth={2.2} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/register"
+                className={`sp-btn ${plan.featured ? "sp-btn--primary" : "sp-btn--outline"}`}
+              >
+                {plan.cta}
+              </Link>
+            </article>
+          ))}
         </div>
-
-        {/* Pro Plan (Featured) */}
-        <div className="pricing-card featured">
-          <span className="pricing-badge">Most Popular</span>
-          <h3>Pro Tier</h3>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-            For growing multi-branch chains
-          </p>
-          <div className="pricing-amount">
-            $79 <span style={{ fontSize: "1rem", color: "#64748b" }}>/ mo</span>
-          </div>
-          <ul className="pricing-features">
-            <li>✓ Up to 5 Locations</li>
-            <li>✓ Unlimited Staff Members</li>
-            <li>✓ Auto-Shift Overlap Detection</li>
-            <li>✓ CSV/PDF Timesheet Export</li>
-          </ul>
-          <Link
-            to="/register"
-            className="btn-primary"
-            style={{ textAlign: "center" }}
-          >
-            Start 14-Day Free Trial
-          </Link>
-        </div>
-
-        {/* Enterprise Plan */}
-        <div className="pricing-card">
-          <h3>Enterprise</h3>
-          <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-            For large scale franchises
-          </p>
-          <div className="pricing-amount">
-            $199{" "}
-            <span style={{ fontSize: "1rem", color: "#64748b" }}>/ mo</span>
-          </div>
-          <ul className="pricing-features">
-            <li>✓ Unlimited Locations</li>
-            <li>✓ Custom Manager Permissions</li>
-            <li>✓ Dedicated API & System Audit Logs</li>
-            <li>✓ Priority Support</li>
-          </ul>
-          <Link
-            to="/register"
-            className="btn-secondary"
-            style={{ textAlign: "center" }}
-          >
-            Contact Sales
-          </Link>
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

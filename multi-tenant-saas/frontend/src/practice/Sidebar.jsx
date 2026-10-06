@@ -20,10 +20,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Shifts", icon: CalendarDays, path: "/shifts" },
   { label: "Timesheets", icon: Clock3, path: "/timesheets" },
-  { label: "Payroll", icon: Wallet },
-  { label: "Expense Reports", icon: FileText },
   { label: "People", icon: Users, path: "/people" },
-  { label: "Invoices", icon: FileText },
   { label: "Organizations", icon: Building2 },
 ];
 

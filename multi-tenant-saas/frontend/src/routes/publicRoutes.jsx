@@ -11,6 +11,7 @@ import PlannrPeoples from "../practice/PlannrPeople";
 import PlannrDashboard from "../practice/PlannrDashboard";
 import PlannrTimesheets from "../practice/Timesheets";
 import AdminLayout from "../practice/AdminLayout";
+import FeaturesPage from "../components/FeaturesPage";
 
 export const PublicLayout = () => {
   return (
@@ -26,7 +27,7 @@ export const publicRoutes = (
     <Route element={<PublicLayout />}>
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/features" element={<LandingPage />} />
+      <Route path="/features" element={<FeaturesPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
     </Route>
