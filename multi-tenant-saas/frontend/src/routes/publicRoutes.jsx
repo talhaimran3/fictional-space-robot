@@ -25,7 +25,7 @@ export const PublicLayout = () => {
 
 export const publicRoutes = (
   <>
-    {/* Marketing + auth — PublicNavbar + Footer */}
+    {/* Marketing + auth */}
     <Route element={<PublicLayout />}>
       <Route path="/" element={<LandingPage />} />
       <Route path="/pricing" element={<PricingPage />} />
@@ -34,7 +34,7 @@ export const publicRoutes = (
       <Route path="/register" element={<Register />} />
     </Route>
 
-    {/* Plannr practice app — sidebar/topbar only, no public chrome */}
+    {/* Plannr practice app shell — no PublicNavbar/Footer */}
     <Route element={<AdminLayout />}>
       <Route path="/dashboard" element={<PlannrDashboard />} />
       <Route path="/shifts" element={<PlannrShifts />} />
