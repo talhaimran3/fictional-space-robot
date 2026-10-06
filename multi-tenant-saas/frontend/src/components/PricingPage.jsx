@@ -1,3 +1,4 @@
+//multi-tenant-saas/frontend/src/components/PricingPage.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import "./PricingPage.css";

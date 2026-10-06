@@ -1,3 +1,4 @@
+//multi-tenant-saas/frontend/src/components/PublicNavbar.jsx
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "./PublicNavbar.css";

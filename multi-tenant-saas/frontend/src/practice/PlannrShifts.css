@@ -7,12 +7,12 @@
   background: linear-gradient(90deg, #ebf3fa, #f5f7fb);
   position: relative;
 }
-button,
-input,
-select {
+.plannr-app button,
+.plannr-app input,
+.plannr-app select {
   font: inherit;
 }
-button {
+.plannr-app button {
   cursor: pointer;
 }
 
@@ -346,9 +346,6 @@ button {
   color: #fff;
 }
 
-.page {
-  padding: 27px 32px 20px;
-}
 .page-heading-row {
   display: flex;
   justify-content: space-between;
