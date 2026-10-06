@@ -2,52 +2,48 @@ import React, { useEffect, useState } from "react";
 import {
   Menu,
   X,
-  Home,
-  Compass,
-  Settings,
-  User,
-  Bell,
+  LayoutDashboard,
+  Building2,
   Users,
-  ClipboardClock,
-  Clock5,
+  CalendarDays,
+  Code2,
+  Activity,
+  Home,
 } from "lucide-react";
-
-import { Link } from "react-router-dom";
-
+import { Link, useLocation } from "react-router-dom";
 import "./Navigation.css";
-import { BsPeople } from "react-icons/bs";
+
+const NAV_ITEMS = [
+  { label: "Dashboard", path: "/admin", end: true, icon: LayoutDashboard },
+  { label: "Organizations", path: "/admin/organizations", icon: Building2 },
+  { label: "Employees", path: "/admin/employees", icon: Users },
+  { label: "Shifts", path: "/admin/shifts", icon: CalendarDays },
+  { label: "Developer", path: "/admin/developer", icon: Code2 },
+  { label: "API Health", path: "/admin/apihealth", icon: Activity },
+];
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
+  const closeSidebar = () => setIsSidebarOpen(false);
+
+  const isActive = (path, end) => {
+    if (end) return location.pathname === path || location.pathname === "/admin/";
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
     <div className="nav-layout">
-
-      {/* TOP NAVBAR */}
-      <header
-        className={`top-navbar ${
-          isScrolled ? "scrolled" : ""
-        }`}
-      >
+      <header className={`top-navbar ${isScrolled ? "scrolled" : ""}`}>
         <div className="nav-container">
-
           <button
             className="menu-toggle-btn"
             onClick={() => setIsSidebarOpen(true)}
@@ -55,41 +51,21 @@ export default function Navigation() {
           >
             <Menu size={24} />
           </button>
-
-
           <nav className="desktop-links">
-            <Link to="/">Home</Link>
-            
-            <Link to="/profile">Profile</Link>
+            <Link to="/admin">Admin</Link>
+            <Link to="/">Site</Link>
           </nav>
-
-      
         </div>
       </header>
 
-
-      {/* OVERLAY */}
       <div
-        className={`sidebar-overlay ${
-          isSidebarOpen ? "active" : ""
-        }`}
+        className={`sidebar-overlay ${isSidebarOpen ? "active" : ""}`}
         onClick={closeSidebar}
       />
 
-
-      {/* SIDEBAR */}
-      <aside
-        className={`sidebar-drawer ${
-          isSidebarOpen ? "open" : ""
-        }`}
-      >
-
+      <aside className={`sidebar-drawer ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-
-          <div className="sidebar-logo">
-            Menu
-          </div>
-
+          <div className="sidebar-logo">ShiftPulse Admin</div>
           <button
             className="close-toggle-btn"
             onClick={closeSidebar}
@@ -97,57 +73,31 @@ export default function Navigation() {
           >
             <X size={24} />
           </button>
-
         </div>
 
-
         <nav className="sidebar-links">
-
-          <Link to="/" onClick={closeSidebar}>
-            <Home size={18} />
-            Home
-          </Link>
-
-          <Link
-            to="/explore"
-            onClick={closeSidebar}
-          >
-            <ClipboardClock size={18} />
-            Shifts
-          </Link>
-
-          <Link
-            to="/notifications"
-            onClick={closeSidebar}
-          >
-            <BsPeople size={18} />
-            People
-          </Link>
-
-          <Link
-            to="/profile"
-            onClick={closeSidebar}
-          >
-            <Clock5  size={18} />
-            TimeSheets
-          </Link>
+          {NAV_ITEMS.map(({ label, path, end, icon: Icon }) => (
+            <Link
+              key={path}
+              to={path}
+              onClick={closeSidebar}
+              className={isActive(path, end) ? "active" : undefined}
+            >
+              <Icon size={18} />
+              {label}
+            </Link>
+          ))}
 
           <div className="sidebar-divider" />
 
-          <Link
-            to="/settings"
-            onClick={closeSidebar}
-          >
-            <Settings size={18} />
-            Settings
+          <Link to="/" onClick={closeSidebar}>
+            <Home size={18} />
+            Back to site
           </Link>
-
         </nav>
-
       </aside>
 
       <main className="main-content" />
-
     </div>
   );
 }

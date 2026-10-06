@@ -86,7 +86,6 @@ const AllOrganizationsPage = () => {
 
   return (
     <div className="orgs-page">
-      {/* Header */}
       <header className="orgs-header">
         <div className="orgs-header__left">
           <span className="orgs-eyebrow">Tenants</span>
@@ -112,7 +111,6 @@ const AllOrganizationsPage = () => {
         </div>
       </header>
 
-      {/* Toolbar */}
       <div className="orgs-toolbar">
         <div className="orgs-search">
           <Search size={17} className="orgs-search__icon" />
@@ -149,7 +147,6 @@ const AllOrganizationsPage = () => {
         </div>
       </div>
 
-      {/* Content */}
       {filteredOrganizations.length === 0 ? (
         <div className="orgs-empty">
           <div className="orgs-empty__icon">
@@ -195,32 +192,17 @@ const AllOrganizationsPage = () => {
               </div>
 
               <div className="org-card__stats">
-                <OrgStat
-                  icon={Users}
-                  label="Employees"
-                  value={getEmployeeCount(org)}
-                />
-                <OrgStat
-                  icon={UserCheck}
-                  label="Active"
-                  value={getActiveEmployeeCount(org)}
-                />
+                <OrgStat icon={Users} label="Employees" value={getEmployeeCount(org)} />
+                <OrgStat icon={UserCheck} label="Active" value={getActiveEmployeeCount(org)} />
                 <OrgStat
                   icon={CalendarDays}
                   label="Shifts"
                   value={org.shifts?.length ?? org.shiftCount ?? 0}
                 />
-                <OrgStat
-                  icon={Clock3}
-                  label="Today"
-                  value={org.todayShiftCount ?? 0}
-                />
+                <OrgStat icon={Clock3} label="Today" value={org.todayShiftCount ?? 0} />
               </div>
 
-              <Link
-                to={`/admin/org/all/${org.id}`}
-                className="org-card__action"
-              >
+              <Link to={`/admin/organizations/${org.id}`} className="org-card__action">
                 View details
                 <ArrowRight size={15} />
               </Link>
@@ -265,7 +247,7 @@ const AllOrganizationsPage = () => {
                   Edit
                 </button>
                 <Link
-                  to={`/admin/org/all/${org.id}`}
+                  to={`/admin/organizations/${org.id}`}
                   className="orgs-btn orgs-btn--ghost"
                 >
                   View

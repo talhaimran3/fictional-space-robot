@@ -1,4 +1,4 @@
-// multi-tenant-saas/frontend/src/components/AllOrganizationsShifts.jsx
+// multi-tenant-saas/frontend/src/components/organizations/AllOrganizationsShifts.jsx
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -19,7 +19,7 @@ export const AllOrganizationsShifts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("list"); // list groups by org; grid is flatter
+  const [viewMode, setViewMode] = useState("list");
 
   useEffect(() => {
     async function fetchAllData() {
@@ -74,7 +74,6 @@ export const AllOrganizationsShifts = () => {
 
   return (
     <div className="aos-page">
-      {/* Header */}
       <header className="aos-header">
         <div>
           <p className="aos-eyebrow">Admin overview</p>
@@ -93,7 +92,6 @@ export const AllOrganizationsShifts = () => {
         </div>
       </header>
 
-      {/* Toolbar */}
       <div className="aos-toolbar">
         <div className="aos-search">
           <Search size={17} className="aos-search__icon" />
@@ -125,7 +123,6 @@ export const AllOrganizationsShifts = () => {
         </div>
       </div>
 
-      {/* Content */}
       {filtered.length === 0 ? (
         <div className="aos-empty">
           <Building2 size={36} />
@@ -162,7 +159,7 @@ export const AllOrganizationsShifts = () => {
                     </span>
                   </div>
                   <Link
-                    to={`/singletenant/${org.id}`}
+                    to={`/admin/organizations/${org.id}`}
                     className="aos-view-btn-link"
                   >
                     View tenant
@@ -214,7 +211,6 @@ export const AllOrganizationsShifts = () => {
           ))}
         </div>
       ) : (
-        /* Compact grid: one card per org with shift count */
         <div className="aos-compact-grid">
           {filtered.map((org) => (
             <article key={org.id} className="aos-compact-card">
@@ -231,7 +227,7 @@ export const AllOrganizationsShifts = () => {
                 </span>
               </div>
               <Link
-                to={`/singletenant/${org.id}`}
+                to={`/admin/organizations/${org.id}`}
                 className="aos-compact-card__link"
               >
                 View tenant

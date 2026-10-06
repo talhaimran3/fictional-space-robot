@@ -1,4 +1,4 @@
-// multi-tenant-saas/frontend/src/pages/SingleOrganizationPage/SingleOrganizationPage.jsx
+// multi-tenant-saas/frontend/src/components/organizations/SingleOrganizationPage.jsx
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -15,8 +15,8 @@ import {
   CalendarDays,
 } from "lucide-react";
 import apiClient from "../../api/client.js";
-import { AddEditFormModal } from "../../components/organizations/AddEditFormModal.jsx";
-import { AddEditShiftFormModal } from "../../components/shifts/AddEditShiftFormModal.jsx";
+import { AddEditFormModal } from "./AddEditFormModal.jsx";
+import { AddEditShiftFormModal } from "../shifts/AddEditShiftFormModal.jsx";
 import "./singleOrganizationPage.css";
 
 export const SingleOrganizationPage = () => {
@@ -119,7 +119,7 @@ export const SingleOrganizationPage = () => {
         );
       } else if (deleteTarget.type === "org") {
         await apiClient.delete(`/organizations/${id}`);
-        window.location.href = "/admin/org/all";
+        window.location.href = "/admin/organizations";
         return;
       }
       setDeleteTarget(null);
@@ -152,7 +152,7 @@ export const SingleOrganizationPage = () => {
       <div className="sop-page">
         <div className="sop-error">
           <p>{error}</p>
-          <Link to="/admin/org/all" className="sop-btn sop-btn--ghost">
+          <Link to="/admin/organizations" className="sop-btn sop-btn--ghost">
             ← Back to organizations
           </Link>
         </div>
@@ -165,7 +165,7 @@ export const SingleOrganizationPage = () => {
       <div className="sop-page">
         <div className="sop-error">
           <p>Organization not found.</p>
-          <Link to="/admin/org/all" className="sop-btn sop-btn--ghost">
+          <Link to="/admin/organizations" className="sop-btn sop-btn--ghost">
             ← Back to organizations
           </Link>
         </div>
@@ -175,10 +175,9 @@ export const SingleOrganizationPage = () => {
 
   return (
     <div className="sop-page">
-      {/* Header */}
       <header className="sop-header">
         <div className="sop-header__left">
-          <Link to="/admin/org/all" className="sop-back">
+          <Link to="/admin/organizations" className="sop-back">
             <ArrowLeft size={16} />
             Organizations
           </Link>
@@ -214,7 +213,6 @@ export const SingleOrganizationPage = () => {
         </div>
       </header>
 
-      {/* Info cards */}
       <div className="sop-info">
         <div className="sop-info__item">
           <span>Organization</span>
@@ -240,7 +238,6 @@ export const SingleOrganizationPage = () => {
         </div>
       </div>
 
-      {/* Shifts section */}
       <section className="sop-shifts">
         <div className="sop-shifts__header">
           <div>
@@ -259,16 +256,21 @@ export const SingleOrganizationPage = () => {
                 id="shift-filter"
                 value={shiftFilter}
                 onChange={(event) => setShiftFilter(event.target.value)}
-                style={{ border: "0", background: "transparent", color: "inherit", fontWeight: 600, cursor: "pointer", outline: "none" }}
+                style={{
+                  border: "0",
+                  background: "transparent",
+                  color: "inherit",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
               >
                 <option value="all">All</option>
                 <option value="today">Today</option>
                 <option value="week">This week</option>
                 <option value="month">This month</option>
               </select>
-              <span>
-                ({filteredShifts.length})
-              </span>
+              <span>({filteredShifts.length})</span>
             </label>
             <div className="sop-view-toggle">
               <button
@@ -394,9 +396,7 @@ export const SingleOrganizationPage = () => {
                         dateStyle: "medium",
                         timeStyle: "short",
                       })}
-                      {shift.total_hours != null && (
-                        <> · {shift.total_hours} hrs</>
-                      )}
+                      {shift.total_hours != null && <> · {shift.total_hours} hrs</>}
                     </p>
                   </div>
                 </div>
@@ -431,7 +431,6 @@ export const SingleOrganizationPage = () => {
         )}
       </section>
 
-      {/* Edit Organization Modal */}
       <AddEditFormModal
         isOpen={showOrgModal}
         onClose={() => setShowOrgModal(false)}
@@ -439,7 +438,6 @@ export const SingleOrganizationPage = () => {
         onSuccess={fetchAllDetails}
       />
 
-      {/* Add / Edit Shift Modal */}
       <AddEditShiftFormModal
         isOpen={isShiftModalOpen}
         onClose={() => setIsShiftModalOpen(false)}
@@ -448,12 +446,8 @@ export const SingleOrganizationPage = () => {
         onSuccess={fetchAllDetails}
       />
 
-      {/* Delete confirm */}
       {deleteTarget && (
-        <div
-          className="sop-modal-overlay"
-          onClick={() => setDeleteTarget(null)}
-        >
+        <div className="sop-modal-overlay" onClick={() => setDeleteTarget(null)}>
           <div
             className="sop-modal sop-modal--sm"
             onClick={(e) => e.stopPropagation()}
@@ -462,8 +456,7 @@ export const SingleOrganizationPage = () => {
           >
             <div className="sop-modal__header">
               <h2>
-                Delete{" "}
-                {deleteTarget.type === "shift" ? "shift" : "organization"}?
+                Delete {deleteTarget.type === "shift" ? "shift" : "organization"}?
               </h2>
               <button
                 type="button"
