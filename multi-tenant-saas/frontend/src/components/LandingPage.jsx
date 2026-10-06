@@ -1,72 +1,75 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight, CalendarDays, MapPin, Wallet } from "lucide-react";
 import "./LandingPage.css";
 
 export default function LandingPage() {
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="landing-hero">
-        <span className="hero-pill">⚡ Next-Gen Workforce Management</span>
-        <h1 className="hero-title">
-          Automated Rota Scheduling <br /> built for Multi-Branch Teams
+    <div className="sp-landing">
+      <section className="sp-landing-hero">
+        <span className="sp-landing-pill">Next-gen workforce management</span>
+        <h1>
+          Automated rota scheduling
+          <br />
+          built for multi-branch teams
         </h1>
-        <p className="hero-subtitle">
-          Eliminate shift overlaps, manage labor budgets in real-time, and let
-          staff swap schedules effortlessly.
+        <p>
+          Eliminate shift overlaps, manage labor budgets in real time, and let
+          staff swap schedules without the spreadsheet chaos.
         </p>
-        <div className="hero-ctas">
-          <Link
-            to="/register"
-            className="btn-primary"
-            style={{ padding: "12px 28px", fontSize: "1rem" }}
-          >
-            Get Started Free
+        <div className="sp-landing-ctas">
+          <Link to="/register" className="sp-landing-btn sp-landing-btn--primary">
+            Get started free
+            <ArrowRight size={16} />
           </Link>
-          <Link
-            to="/pricing"
-            className="btn-secondary"
-            style={{ padding: "12px 24px", fontSize: "1rem" }}
-          >
-            View Plans & Pricing
+          <Link to="/pricing" className="sp-landing-btn sp-landing-btn--outline">
+            View plans &amp; pricing
           </Link>
         </div>
       </section>
 
-      {/* Feature Section */}
-      <section className="features-section">
-        <div className="section-header">
+      <section className="sp-landing-features">
+        <div className="sp-landing-section-head">
           <h2>Everything you need to run your locations</h2>
-          <p style={{ color: "#64748b" }}>
-            Designed specifically for shift managers and store leads.
-          </p>
+          <p>Designed for shift managers and store leads.</p>
         </div>
-
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">🗓️</div>
-            <h3>Smart Rota Builder</h3>
-            <p style={{ color: "#64748b" }}>
+        <div className="sp-landing-grid">
+          <article className="sp-landing-card">
+            <div className="sp-landing-icon">
+              <CalendarDays size={20} />
+            </div>
+            <h3>Smart rota builder</h3>
+            <p>
               Drag and drop weekly shifts with automated conflict and overtime
               detection.
             </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">⏱️</div>
-            <h3>Geofenced Clock-ins</h3>
-            <p style={{ color: "#64748b" }}>
-              Ensure employees clock in directly from their assigned location
-              address.
+          </article>
+          <article className="sp-landing-card">
+            <div className="sp-landing-icon">
+              <MapPin size={20} />
+            </div>
+            <h3>Geofenced clock-ins</h3>
+            <p>
+              Ensure employees clock in from their assigned location for cleaner
+              attendance.
             </p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💵</div>
-            <h3>Live Labor Budgeting</h3>
-            <p style={{ color: "#64748b" }}>
-              Track real-time wages against target budget caps before publishing
-              rotas.
+          </article>
+          <article className="sp-landing-card">
+            <div className="sp-landing-icon">
+              <Wallet size={20} />
+            </div>
+            <h3>Live labor budgeting</h3>
+            <p>
+              Track wages against budget caps before you publish the week&apos;s
+              rota.
             </p>
-          </div>
+          </article>
+        </div>
+        <div className="sp-landing-cta-band">
+          <h2>See all product features</h2>
+          <Link to="/features" className="sp-landing-btn sp-landing-btn--primary">
+            Explore features
+          </Link>
         </div>
       </section>
     </div>

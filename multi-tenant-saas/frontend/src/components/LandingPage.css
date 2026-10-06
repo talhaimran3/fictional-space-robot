@@ -1,82 +1,162 @@
-.landing-hero {
-  max-width: 1200px;
+.sp-landing {
+  --sp-navy: #24344d;
+  --sp-text: #536781;
+  --sp-muted: #7a8ba3;
+  --sp-blue: #3978ea;
+  --sp-border: rgba(198, 215, 234, 0.55);
+  --sp-glass: rgba(255, 255, 255, 0.72);
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--sp-text);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 255, 255, 0.9), transparent 30%),
+    linear-gradient(180deg, #f5f9ff 0%, #eef5fb 100%);
+}
+
+.sp-landing-hero {
+  max-width: 780px;
   margin: 0 auto;
-  padding: 80px 24px 60px 24px;
+  padding: 72px 24px 48px;
   text-align: center;
 }
 
-.hero-pill {
-  display: inline-block;
-  background-color: #eff6ff;
-  color: #2563eb;
-  font-size: 0.85rem;
+.sp-landing-pill {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--sp-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--sp-blue);
+  font-size: 12px;
   font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-.hero-title {
-  font-size: 3.2rem;
-  font-weight: 800;
+.sp-landing-hero h1 {
+  margin: 0 0 14px;
+  color: var(--sp-navy);
+  font-size: clamp(1.9rem, 4.5vw, 2.75rem);
+  font-weight: 700;
   letter-spacing: -0.03em;
-  color: #0f172a;
   line-height: 1.15;
-  margin-bottom: 20px;
 }
 
-.hero-subtitle {
-  font-size: 1.25rem;
-  color: #64748b;
-  max-width: 680px;
-  margin: 0 auto 36px auto;
-  line-height: 1.6;
+.sp-landing-hero p {
+  margin: 0 auto 22px;
+  max-width: 520px;
+  font-size: 15px;
+  line-height: 1.65;
 }
 
-.hero-ctas {
+.sp-landing-ctas {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-/* Features Grid */
-.features-section {
-  max-width: 1200px;
-  margin: 60px auto 100px auto;
-  padding: 0 24px;
+.sp-landing-btn {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
 }
 
-.section-header {
+.sp-landing-btn--primary {
+  background: var(--sp-blue);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(57, 120, 234, 0.22);
+}
+
+.sp-landing-btn--outline {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: #cad8ea;
+  color: var(--sp-text);
+}
+
+.sp-landing-features {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 24px 72px;
+}
+
+.sp-landing-section-head {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 28px;
 }
 
-.features-grid {
+.sp-landing-section-head h2 {
+  margin: 0 0 8px;
+  color: var(--sp-navy);
+  font-size: 1.5rem;
+}
+
+.sp-landing-section-head p {
+  margin: 0;
+  color: var(--sp-muted);
+}
+
+.sp-landing-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
-.feature-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+.sp-landing-card {
+  padding: 22px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--sp-border);
+  background: var(--sp-glass);
+  box-shadow: 0 10px 32px rgba(80, 132, 191, 0.07);
+}
+
+.sp-landing-icon {
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
-  padding: 32px;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: grid;
+  place-items: center;
+  background: #e1edff;
+  color: var(--sp-blue);
+  margin-bottom: 12px;
 }
 
-.feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
+.sp-landing-card h3 {
+  margin: 0 0 8px;
+  color: var(--sp-navy);
+  font-size: 15px;
 }
 
-.feature-icon {
-  font-size: 2rem;
-  margin-bottom: 16px;
+.sp-landing-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
 }
 
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 2.2rem;
+.sp-landing-cta-band {
+  text-align: center;
+  padding: 36px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--sp-border);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.sp-landing-cta-band h2 {
+  margin: 0 0 16px;
+  color: var(--sp-navy);
+  font-size: 1.25rem;
+}
+
+@media (max-width: 800px) {
+  .sp-landing-grid {
+    grid-template-columns: 1fr;
   }
 }
