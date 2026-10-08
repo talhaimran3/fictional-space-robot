@@ -7,6 +7,8 @@ import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import membersRoutes from "./routes/membersRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
+import workspaceRoutes from "./routes/workspaceRoutes.js";
+import developerWorkspaceRoutes from "./routes/developerWorkspaceRoutes.js";
 
 employeeRoutes
 import developerDatabaseRoutes from "./routes/developerDatabaseRoutes.js";
@@ -114,6 +116,8 @@ app.get("/api/health-check", async (req, res) => {
 
 // Main ROUTES
 app.use("/api/organizations", organizationRoutes);
+app.use("/api/orgs/:organizationId", workspaceRoutes);
+app.use("/api/developer-workspace", developerWorkspaceRoutes);
 app.use("/api/members", membersRoutes);
 
 app.use("/api/shifts", shiftRoutes);
