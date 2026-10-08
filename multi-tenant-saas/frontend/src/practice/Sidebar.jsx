@@ -14,26 +14,28 @@ import {
   Clock3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useOrganization } from "../context/organizationContext";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Shifts", icon: CalendarDays, path: "/shifts" },
-  { label: "Timesheets", icon: Clock3, path: "/timesheets" },
+  { label: "Dashboard", icon: LayoutDashboard, section: "dashboard" },
+  { label: "Shifts", icon: CalendarDays, section: "shifts" },
+  { label: "Timesheets", icon: Clock3, section: "timesheets" },
   { label: "Payroll", icon: Wallet },
   { label: "Expense Reports", icon: FileText },
-  { label: "People", icon: Users, path: "/people" },
+  { label: "People", icon: Users, section: "people" },
   { label: "Invoices", icon: FileText },
-  { label: "Organizations", icon: Building2 },
 ];
 
-export default function Sidebar({
-  isOpen,
-  onClose,
-  activeNav = "Shifts",
-  onNavClick,
-}) {
+export default function Sidebar({ isOpen, onClose, activeNav = "Shifts", onNavClick }) {
   const navigate = useNavigate();
+  const organization = useOrganization();
+
+  const goToSection = (section) => {
+    navigate(`/org/${organization.id}/${section}`);
+    if (onNavClick) onNavClick(section);
+    onClose();
+  };
 
   return (
     <>
@@ -51,16 +53,12 @@ export default function Sidebar({
           </button>
         </div>
 
-        <button
-          className="pl-org-switcher"
-          type="button"
-          onClick={() => alert("Switch Organization")}
-        >
+        <button className="pl-org-switcher" type="button" onClick={() => {}}>
           <div className="pl-org-monogram">
             <Building2 size={16} />
           </div>
           <div className="pl-org-copy">
-            <strong>Acme Company</strong>
+            <strong>{organization.name}</strong>
             <span>Team workspace</span>
           </div>
           <ChevronsUpDown size={14} />
@@ -69,18 +67,16 @@ export default function Sidebar({
         <nav className="pl-main-nav">
           <div className="pl-nav-label">WORKSPACE</div>
           <div className="pl-nav-menu">
-            {NAV_ITEMS.map(({ label, icon: Icon, path }) => {
+            {NAV_ITEMS.map(({ label, icon: Icon, section }) => {
               const active = activeNav === label;
               return (
                 <button
                   key={label}
                   className={`pl-nav-item ${active ? "is-active" : ""}`}
                   type="button"
-                  onClick={() => {
-                    if (path) navigate(path);
-                    if (onNavClick) onNavClick(label);
-                    onClose();
-                  }}
+                  onClick={() => section && goToSection(section)}
+                  disabled={!section}
+                  title={!section ? "Coming soon" : undefined}
                 >
                   <Icon size={19} strokeWidth={1.8} />
                   <span>{label}</span>
@@ -99,21 +95,13 @@ export default function Sidebar({
             <strong>A little help?</strong>
           </div>
           <p>Your team, running smoothly. We’re here if you need us.</p>
-          <button
-            type="button"
-            className="pl-help-link"
-            onClick={() => alert("Help Center")}
-          >
+          <button type="button" className="pl-help-link" onClick={() => {}}>
             Visit help center
             <ArrowUpRight size={14} />
           </button>
         </div>
 
-        <button
-          className="pl-settings-link"
-          type="button"
-          onClick={() => alert("Settings")}
-        >
+        <button className="pl-settings-link" type="button" onClick={() => {}}>
           <Settings size={19} />
           <span>Settings</span>
         </button>
