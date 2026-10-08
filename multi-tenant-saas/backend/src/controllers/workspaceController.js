@@ -66,8 +66,14 @@ export const getUsers = async (req, res, next) => {
               ) AS project,
               (SELECT COUNT(*)::int FROM shifts s WHERE s.organization_id = u.organization_id AND s.employee_id = u.id) AS total_shifts
        FROM users u
-       LEFT JOIN user_projects up ON up.user_id = u.id
-       LEFT JOIN projects p ON p.id = up.project_id
+       LEFT JOIN LATERAL (
+         SELECT p.id,p.name,p.code,p.status
+         FROM user_projects up
+         JOIN projects p ON p.id=up.project_id
+         WHERE up.user_id=u.id AND p.organization_id=u.organization_id
+         ORDER BY p.name
+         LIMIT 1
+       ) p ON true
        WHERE ${where.join(" AND ")}
        ORDER BY u.full_name ASC`,
       values
@@ -85,7 +91,10 @@ export const createUser = async (req, res, next) => {
 
     await client.query("BEGIN");
     const existing = await client.query("SELECT id FROM users WHERE LOWER(email)=LOWER($1)", [email.trim()]);
-    if (existing.rows.length) return res.status(409).json({ success:false, message:"A user with this email already exists." });
+    if (existing.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ success:false, message:"A user with this email already exists." });
+    }
 
     const hash = password ? await bcrypt.hash(password, 10) : null;
     const inserted = await client.query(
