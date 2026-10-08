@@ -1,0 +1,16 @@
+import React,{useMemo,useState} from "react";
+import {Clock3,Search,ChevronLeft,ChevronRight,CalendarDays} from "lucide-react";
+import {useShifts} from "../hooks/useShifts";
+import "./Workspace.css";
+export default function Timesheets(){
+ const{shifts=[],loading,error}=useShifts();const[now,setNow]=useState(new Date());const[search,setSearch]=useState("");
+ const rows=useMemo(()=>shifts.map(s=>{const start=new Date(s.start_time),end=new Date(s.end_time);return{...s,start,end,hours:Number(s.total_hours||Math.max(0,(end-start)/36e5))}}).filter(s=>s.start.getMonth()===now.getMonth()&&s.start.getFullYear()===now.getFullYear()&&(!search||s.employee?.name?.toLowerCase().includes(search.toLowerCase())||s.title?.toLowerCase().includes(search.toLowerCase()))),[shifts,now,search]);
+ const month=now.toLocaleString(undefined,{month:"long",year:"numeric"});const total=rows.reduce((n,r)=>n+r.hours,0);
+ if(loading)return <div className="sp-page"><div className="sp-state"><span className="sp-spinner"/>Loading timesheets...</div></div>;if(error)return <div className="sp-page"><div className="sp-error">{error}</div></div>;
+ return <div className="sp-page"><div className="sp-page-head"><div><span className="sp-eyebrow">TIME TRACKING</span><h1>Timesheets</h1><p>Monthly hours derived from scheduled shift records.</p></div><div className="sp-month"><button onClick={()=>setNow(new Date(now.getFullYear(),now.getMonth()-1,1))}><ChevronLeft size={15}/></button><strong>{month}</strong><button onClick={()=>setNow(new Date(now.getFullYear(),now.getMonth()+1,1))}><ChevronRight size={15}/></button></div></div>
+ <div className="sp-kpis"><Kpi label="Recorded Shifts" value={rows.length}/><Kpi label="Worked Hours" value={total.toFixed(1)+"h"}/><Kpi label="Employees" value={new Set(rows.map(r=>r.employee_id||r.employee?.id)).size}/><Kpi label="Exceptions" value={rows.filter(r=>r.status==="no_show"||r.status==="cancelled").length}/></div>
+ <div className="sp-toolbar"><div className="sp-search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search people or shifts..."/></div></div>
+ <div className="sp-table"><div className="sp-table-head"><span>SHIFT</span><span>DATE</span><span>START / END</span><span>HOURS</span><span>STATUS</span></div>{rows.map(r=><div className="sp-table-row" key={r.id}><div className="sp-person"><span className="sp-avatar sp-avatar--green"><Clock3 size={15}/></span><div><strong>{r.title||"Shift"}</strong><small>{r.employee?.name||r.employee_name||"Unassigned"}</small></div></div><span className="sp-chip">{r.start.toLocaleDateString()}</span><span className="sp-muted">{r.start.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})} → {r.end.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span><span className="sp-number">{r.hours.toFixed(1)}h</span><span className="sp-status">{r.status||"scheduled"}</span></div>)}{!rows.length&&<div className="sp-empty">No shift records for this month.</div>}</div>
+ </div>;
+}
+function Kpi({label,value}){return <article className="sp-kpi"><span className="sp-kpi-icon blue"><CalendarDays size={17}/></span><div><span>{label}</span><strong>{value}</strong></div></article>}
