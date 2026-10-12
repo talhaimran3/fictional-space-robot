@@ -88,7 +88,7 @@ const weeklyHours = shifts.reduce((total, shift) => {
             icon={Clock3}
             title="Active Today"
             value={activeToday.toString() + `/${shifts.length} shifts`}
-            note="On Shift • 2 late arrivals"
+            note="Scheduled shifts overlapping today"
             tone="blue"
           />
           <KpiCard
@@ -116,9 +116,9 @@ const weeklyHours = shifts.reduce((total, shift) => {
           </KpiCard>
           <KpiCard
             icon={TriangleAlert}
-            title={shifts.counts.assigned_shifts}
-            value="3 Open Shifts"
-            note="Urgent for tomorrow"
+            title="Open Shifts"
+            value="Not available"
+            note="Open-shift count is not returned by the current shifts hook"
             tone="alert"
           />
         </div>
