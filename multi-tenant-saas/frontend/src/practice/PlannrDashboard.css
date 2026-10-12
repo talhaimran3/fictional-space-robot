@@ -849,3 +849,16 @@ button {
     padding-inline: 12px;
   }
 }
+
+
+/* Punctuality API states */
+.pd-punctuality-message,
+.pd-punctuality-footnote {
+  margin: 12px 0 0;
+  color: #858a96;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.pd-punctuality-message[role="alert"] {
+  color: #b45309;
+}
