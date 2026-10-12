@@ -2,6 +2,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import shiftRoutes from "./routes/shiftRoutes.js";
+import punctualityRoutes from "./routes/punctualityRoutes.js";
 import organizationRoutes from "./routes/organizationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -117,6 +118,7 @@ app.use("/api/organizations", organizationRoutes);
 app.use("/api/members", membersRoutes);
 
 app.use("/api/shifts", shiftRoutes);
+app.use("/api/punctuality", punctualityRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
