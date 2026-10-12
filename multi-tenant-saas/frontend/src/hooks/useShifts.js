@@ -20,7 +20,7 @@ export const useShifts = () => {
           },
         });
 
-        console.log("Fetched all shifts : ", res.data.data);
+        console.log("Fetched all shifts : ", res);
         setShifts(res.data?.data || []);
       } catch (error) {
         setError(

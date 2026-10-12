@@ -52,6 +52,9 @@ export default function PublicNavbar() {
                 <Link to="/admin" className="btn-secondary">
                   Admin Portal
                 </Link>
+                   <Link to="/admin2" className="btn-secondary">
+                 Practice Admin Portal
+                </Link>
                 <button type="button" onClick={handleLogout} className="btn-secondary">
                   Log Out
                 </button>

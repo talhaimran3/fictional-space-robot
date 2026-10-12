@@ -17,10 +17,10 @@ import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Shifts", icon: CalendarDays, path: "/shifts" },
-  { label: "Timesheets", icon: Clock3, path: "/timesheets" },
-  { label: "People", icon: Users, path: "/people" },
+  { label: "Dashboard", icon: LayoutDashboard, path: "/admin2" },
+  { label: "Shifts", icon: CalendarDays, path: "/admin2/shifts" },
+  { label: "Timesheets", icon: Clock3, path: "/admin2/timesheets" },
+  { label: "People", icon: Users, path: "/admin2/people" },
   { label: "Organizations", icon: Building2 },
 ];
 

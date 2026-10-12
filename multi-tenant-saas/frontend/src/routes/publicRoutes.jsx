@@ -36,10 +36,10 @@ export const publicRoutes = (
 
     {/* Plannr practice app shell — no PublicNavbar/Footer */}
     <Route element={<AdminLayout />}>
-      <Route path="/dashboard" element={<PlannrDashboard />} />
-      <Route path="/shifts" element={<PlannrShifts />} />
-      <Route path="/people" element={<PlannrPeoples />} />
-      <Route path="/timesheets" element={<PlannrTimesheets />} />
+      <Route path="admin2" element={<PlannrDashboard />} />
+      <Route path="admin2/shifts" element={<PlannrShifts />} />
+      <Route path="admin2/people" element={<PlannrPeoples />} />
+      <Route path="admin2/timesheets" element={<PlannrTimesheets />} />
     </Route>
   </>
 );

@@ -82,11 +82,24 @@ export const getShifts = async (req, res, next) => {
     `;
 
     const result = await db.query(queryText, [organization_id]);
+    const countsResult = await db.query(
+      `SELECT
+        COUNT(*) FILTER (
+          WHERE employee_id IS NULL AND status != 'cancelled'
+        ) AS unassigned_shifts,
+        COUNT(*) FILTER (
+          WHERE employee_id IS NOT NULL AND status != 'cancelled'
+        ) AS assigned_shifts
+      FROM shifts
+      WHERE organization_id = $1;`,
+      [organization_id]
+    );
 
     res.json({
       status: "success",
       results: result.rowCount,
       data: result.rows,
+      counts: countsResult.rows[0],
     });
   } catch (error) {
     console.error("Failed to fetch shifts:", error);
