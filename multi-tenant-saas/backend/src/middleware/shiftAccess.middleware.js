@@ -27,9 +27,10 @@ export const requireDeveloper = (req, res, next) => {
 };
 
 /**
- * Temporary staff-management policy until fine-grained memberships are built:
- * developers manage any organization; admins/managers manage only their own
- * organization's staff. A non-developer cannot assign the developer role.
+ * Interim staff policy: developers manage any organization; organization
+ * owners/admins/managers can manage staff only within their own organization.
+ * The uploaded schema currently omits "owner" from users.role's enum, so owner
+ * role accounts will need a schema change before that role can actually be stored.
  */
 export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
   const user = req.user;
@@ -40,9 +41,9 @@ export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
   if (user.role === "developer") {
     return next();
   }
-  if (!["admin", "manager"].includes(user.role) || !user.organizationId) {
+  if (!["owner", "admin", "manager"].includes(user.role) || !user.organizationId) {
     return res.status(403).json({
-      error: "Only developers, organization admins, or managers can manage staff.",
+      error: "Only developers, organization owners, admins, or managers can manage staff.",
     });
   }
 
