@@ -2,33 +2,31 @@ import React, { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./TopBar";
+import { useAuth } from "../context/authContext";
 import "./AdminLayout.css";
 
-// Map URL path → sidebar label (must match NAV_ITEMS labels in Sidebar.jsx)
 const PATH_TO_NAV = {
-  "/dashboard": "Dashboard",
-  "/shifts": "Shifts",
-  "/timesheets": "Timesheets",
-  "/people": "People",
+  "/admin2": "Dashboard",
+  "/admin2/shifts": "Shifts",
+  "/admin2/timesheets": "Timesheets",
+  "/admin2/people": "People",
 };
 
-// Primary action config per route
 const PRIMARY_ACTIONS = {
-  "/dashboard": { label: "Quick Shift", action: () => alert("Quick Shift from Dashboard") },
-  "/shifts": { label: "Quick Shift", action: () => alert("Quick Shift from Shifts") },
-  "/people": { label: "Add Member", action: () => alert("Add Member from People") },
-  "/timesheets": { label: "Approve All", action: () => alert("Approve All from Timesheets") },
+  "/admin2": { label: "Quick Shift", action: () => alert("Quick Shift is not connected yet.") },
+  "/admin2/people": { label: "Add Member", action: () => alert("Member management is not connected yet.") },
+  "/admin2/timesheets": { label: "Approve All", action: () => alert("Timesheet approvals are not connected yet.") },
 };
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
-  // Derive active nav purely from the current URL (recommended)
   const activeNav = PATH_TO_NAV[location.pathname] || "Dashboard";
-
-  // Dynamic primary button based on current route
-  const primary = PRIMARY_ACTIONS[location.pathname] || PRIMARY_ACTIONS["/dashboard"];
+  const isDeveloper = user?.role === "developer";
+  // Shift creation has a real page-local handler, so don't render a fake topbar action here.
+  const primary = isDeveloper ? PRIMARY_ACTIONS[location.pathname] : null;
 
   return (
     <div className="pln-layout">
@@ -36,25 +34,21 @@ export default function AdminLayout() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         activeNav={activeNav}
-        // onNavClick is optional now – URL is the source of truth
-        onNavClick={() => {}}
       />
 
       <main className="pln-layout-main">
         <Topbar
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-          onPrimaryAction={primary.action}
-          primaryActionLabel={primary.label}
+          onPrimaryAction={primary?.action}
+          primaryActionLabel={primary?.label}
           searchPlaceholder={
-            location.pathname === "/people"
+            location.pathname === "/admin2/people"
               ? "Search staff, roles, departments..."
-              : location.pathname === "/timesheets"
+              : location.pathname === "/admin2/timesheets"
                 ? "Search people, logs..."
-                : "Search shifts, staff, locations..."
+                : "Search shifts, staff, organizations..."
           }
         />
-
-        {/* Page content is injected here by React Router */}
         <div className="pln-layout-content">
           <Outlet />
         </div>
