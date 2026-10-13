@@ -3,7 +3,11 @@ import apiClient from "../api/client";
 import { useAuth } from "../context/authContext";
 
 export const useShifts = (organizationId) => {
-  const [result, setResult] = useState({ organizationId: "", shifts: [] });
+  const [result, setResult] = useState({
+    organizationId: "",
+    token: null,
+    shifts: [],
+  });
   const [loading, setLoading] = useState(Boolean(organizationId));
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -14,7 +18,7 @@ export const useShifts = (organizationId) => {
 
     const fetchShifts = async () => {
       if (!token || !organizationId) {
-        setResult({ organizationId, shifts: [] });
+        setResult({ organizationId, token, shifts: [] });
         setLoading(false);
         setError(null);
         return;
@@ -30,12 +34,13 @@ export const useShifts = (organizationId) => {
         if (!cancelled) {
           setResult({
             organizationId,
+            token,
             shifts: response.data?.data || [],
           });
         }
       } catch (fetchError) {
         if (!cancelled) {
-          setResult({ organizationId, shifts: [] });
+          setResult({ organizationId, token, shifts: [] });
           setError(
             fetchError?.response?.data?.error ||
               fetchError?.response?.data?.message ||
@@ -55,9 +60,12 @@ export const useShifts = (organizationId) => {
   }, [organizationId, token, reloadKey]);
 
   const refetch = () => setReloadKey((value) => value + 1);
-  // Never render a previous organization's result during an organization switch.
-  const currentResult = result.organizationId === organizationId ? result.shifts : [];
-  const isLoading = loading || (Boolean(organizationId) && result.organizationId !== organizationId);
+  const resultMatchesCurrentSelection =
+    result.organizationId === organizationId && result.token === token;
+  const currentShifts = resultMatchesCurrentSelection ? result.shifts : [];
+  const isLoading =
+    loading ||
+    (Boolean(organizationId) && !resultMatchesCurrentSelection);
 
-  return { shifts: currentResult, loading: isLoading, error, refetch };
+  return { shifts: currentShifts, loading: isLoading, error, refetch };
 };
