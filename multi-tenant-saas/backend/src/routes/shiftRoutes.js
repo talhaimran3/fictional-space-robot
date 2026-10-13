@@ -1,11 +1,10 @@
 import express from "express";
-import { resolveTenant } from "../middleware/resolveTenantMidlleware.js";
-import { getorganizationsWithShifts, getShifts } from "../controllers/shiftController.js";
+import { getorganizationsWithShifts } from "../controllers/shiftController.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.get("/", authenticateToken, resolveTenant, getShifts);
+// Returns all organizations only to developers, or the caller's own organization.
 router.get("/all", authenticateToken, getorganizationsWithShifts);
 
 export default router;
