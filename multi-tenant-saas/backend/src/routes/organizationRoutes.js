@@ -1,6 +1,4 @@
-//multi-tenant-saas/backend/src/routes/organizationRoutes.js
 import Router from "express";
-import { resolveTenant } from "../middleware/resolveTenantMidlleware.js";
 import {
   getAllorganizations,
   getorganizationById,
@@ -12,21 +10,20 @@ import {
   getShifts,
   updateShift,
 } from "../controllers/shiftController.js";
-import { basicRLS } from "../middleware/rls.middleware.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
+import {
+  allowOrganizationShiftRead,
+  requireDeveloper,
+} from "../middleware/shiftAccess.middleware.js";
 
 const router = Router();
 
-// Apply the tenant protection middleware specifically to these routes
-// router.use(resolveTenant);
-router.get("/all", authenticateToken, basicRLS, getAllorganizations);
-
-router.get("/:id", getorganizationById);
-router.get("/:id/all-shifts", getShifts);
-
-router.post("/:id/add-shift", addShifts);
-router.get("/:id/all-shifts/:shiftId", getShiftById);
-router.put("/:id/edit-shift/:shiftId", updateShift);
-router.delete("/:id/delete-shift/:shiftId", deleteShift);
+router.get("/all", authenticateToken, getAllorganizations);
+router.get("/:id", authenticateToken, allowOrganizationShiftRead, getorganizationById);
+router.get("/:id/all-shifts", authenticateToken, allowOrganizationShiftRead, getShifts);
+router.post("/:id/add-shift", authenticateToken, requireDeveloper, addShifts);
+router.get("/:id/all-shifts/:shiftId", authenticateToken, allowOrganizationShiftRead, getShiftById);
+router.put("/:id/edit-shift/:shiftId", authenticateToken, requireDeveloper, updateShift);
+router.delete("/:id/delete-shift/:shiftId", authenticateToken, requireDeveloper, deleteShift);
 
 export default router;
