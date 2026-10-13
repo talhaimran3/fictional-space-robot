@@ -119,7 +119,7 @@ export default function ShiftCalendar({
   });
   const rows = [...employees];
   const knownIds = new Set(rows.map((employee) => employee.id));
-  visibleShifts.forEach((shift) => {
+  weekShifts.forEach((shift) => {
     if (shift.employee_id && !knownIds.has(shift.employee_id)) {
       rows.push({
         id: shift.employee_id,
@@ -129,7 +129,7 @@ export default function ShiftCalendar({
       knownIds.add(shift.employee_id);
     }
   });
-  if (visibleShifts.some((shift) => !shift.employee_id)) {
+  if (weekShifts.some((shift) => !shift.employee_id)) {
     rows.push({ id: "__unassigned__", full_name: "Unassigned shifts", role: "" });
   }
 
