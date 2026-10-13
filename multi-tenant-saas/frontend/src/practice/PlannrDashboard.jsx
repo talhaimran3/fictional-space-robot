@@ -117,8 +117,8 @@ export default function PlannrDashboard() {
           <KpiCard
             icon={TriangleAlert}
             title="Open Shifts"
-            value={shiftsCounts.unassigned_shifts ?? 0}
-            note={`${shiftsCounts.assigned_shifts ?? 0} assigned shifts`}
+            value={shiftsCounts.unassigned_shifts || 0}
+            note={`${shiftsCounts.assigned_shifts || 0} assigned shifts`}
             tone="alert"
           />
         </div>

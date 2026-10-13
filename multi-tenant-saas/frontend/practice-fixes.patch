@@ -1,0 +1,287 @@
+diff --git a/multi-tenant-saas/frontend/src/practice/AdminLayout.jsx b/multi-tenant-saas/frontend/src/practice/AdminLayout.jsx
+index 3d83333..fb62061 100644
+--- a/multi-tenant-saas/frontend/src/practice/AdminLayout.jsx
++++ b/multi-tenant-saas/frontend/src/practice/AdminLayout.jsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from "react";
++import { useState } from "react";
+ import { Outlet, useLocation } from "react-router-dom";
+ import Sidebar from "./Sidebar";
+ import Topbar from "./TopBar";
+diff --git a/multi-tenant-saas/frontend/src/practice/PlannrDashboard.jsx b/multi-tenant-saas/frontend/src/practice/PlannrDashboard.jsx
+index 264aa8d..97236d0 100644
+--- a/multi-tenant-saas/frontend/src/practice/PlannrDashboard.jsx
++++ b/multi-tenant-saas/frontend/src/practice/PlannrDashboard.jsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from "react";
++import { useState } from "react";
+ import {
+   Clock3,
+   TrendingUp,
+@@ -13,6 +13,7 @@ import { KpiCard } from "./DashboardComponents/KpiCard";
+ import { LaborChart } from "./DashboardComponents/LaborChart";
+ import { PendingApprovals } from "./DashboardComponents/PendingApprovals";
+ import { Punctuality } from "./DashboardComponents/Punctuality";
++import { useSearchParams } from "react-router-dom";
+ import { useShifts } from "../hooks/useShifts";
+ 
+ const INITIAL_APPROVALS = [
+@@ -47,36 +48,38 @@ export default function PlannrDashboard() {
+   const [approvals, setApprovals] = useState(INITIAL_APPROVALS);
+   const [isQuickShiftOpen, setIsQuickShiftOpen] = useState(false);
+   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+-  const { shifts } = useShifts();
++  const [searchParams] = useSearchParams();
++  const organizationId = searchParams.get("organizationId") || "";
++  const { shifts } = useShifts(organizationId);
++
+   const handleConfirmApproveAll = () => {
+     setApprovals([]);
+     setIsApproveModalOpen(false);
+   };
+-const today = new Date();
+-
+-const activeToday = shifts.filter((shift) => {
+-  const start = new Date(shift.start_time);
+-  const end = new Date(shift.end_time);
+ 
+-  const startOfToday = new Date(today);
++  const startOfToday = new Date();
+   startOfToday.setHours(0, 0, 0, 0);
+-
+   const startOfTomorrow = new Date(startOfToday);
+   startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+ 
+-  const overlapsToday =
+-    start < startOfTomorrow && end > startOfToday;
++  // Monday-start week, matching the Shifts page.
++  const startOfWeek = new Date(startOfToday);
++  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
++  const endOfWeek = new Date(startOfWeek);
++  endOfWeek.setDate(endOfWeek.getDate() + 7);
+ 
+-  return overlapsToday && shift.status === "scheduled";
+-}).length;
+-const weeklyHours = shifts.reduce((total, shift) => {
+-  const start = new Date(shift.start_time);
+-  const end = new Date(shift.end_time);
++  const overlaps = (shift, from, to) =>
++    new Date(shift.start_time) < to && new Date(shift.end_time) > from;
+ 
+-  const hours = (end - start) / (1000 * 60 * 60);
++  const todaysShifts = shifts.filter((shift) => overlaps(shift, startOfToday, startOfTomorrow));
++  const activeToday = todaysShifts.filter((shift) => shift.status === "scheduled").length;
+ 
+-  return total + hours;
+-}, 0);
++  const weeklyHours = shifts
++    .filter((shift) => overlaps(shift, startOfWeek, endOfWeek) && shift.status !== "cancelled")
++    .reduce(
++      (total, shift) => total + (new Date(shift.end_time) - new Date(shift.start_time)) / 36e5,
++      0
++    );
+ 
+   return (
+     <>
+@@ -87,7 +90,7 @@ const weeklyHours = shifts.reduce((total, shift) => {
+           <KpiCard
+             icon={Clock3}
+             title="Active Today"
+-            value={activeToday.toString() + `/${shifts.length} shifts`}
++            value={`${activeToday}/${todaysShifts.length} shifts`}
+             note="Scheduled shifts overlapping today"
+             tone="blue"
+           />
+diff --git a/multi-tenant-saas/frontend/src/practice/PlannrPeople.jsx b/multi-tenant-saas/frontend/src/practice/PlannrPeople.jsx
+index 2dd33d3..a75994b 100644
+--- a/multi-tenant-saas/frontend/src/practice/PlannrPeople.jsx
++++ b/multi-tenant-saas/frontend/src/practice/PlannrPeople.jsx
+@@ -1,4 +1,4 @@
+-import React, { useMemo, useState } from "react";
++import { useMemo, useState } from "react";
+ import {
+   ArrowDown,
+   CalendarDays,
+@@ -430,7 +430,7 @@ export default function PlannrPeoples() {
+           .toUpperCase()
+           .slice(0, 2) || "EX";
+       const newPerson = {
+-        id: Date.now(),
++        id: crypto.randomUUID(),
+         name,
+         email,
+         role,
+diff --git a/multi-tenant-saas/frontend/src/practice/PlannrShifts.jsx b/multi-tenant-saas/frontend/src/practice/PlannrShifts.jsx
+index 61e2132..06dd0d4 100644
+--- a/multi-tenant-saas/frontend/src/practice/PlannrShifts.jsx
++++ b/multi-tenant-saas/frontend/src/practice/PlannrShifts.jsx
+@@ -1,4 +1,4 @@
+-import React, { useEffect, useMemo, useState } from "react";
++import { useEffect, useMemo, useState } from "react";
+ import { CalendarDays, ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
+ import { useSearchParams } from "react-router-dom";
+ import { useAuth } from "../context/authContext";
+@@ -117,7 +117,10 @@ export default function PlannrShifts() {
+       setModal(null);
+       refetch();
+     } catch (error) {
+-      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to save shift.");
++      throw new Error(
++        error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to save shift.",
++        { cause: error }
++      );
+     } finally {
+       setSaving(false);
+     }
+@@ -136,7 +139,10 @@ export default function PlannrShifts() {
+       setModal(null);
+       refetch();
+     } catch (error) {
+-      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to delete shift.");
++      throw new Error(
++        error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to delete shift.",
++        { cause: error }
++      );
+     } finally {
+       setSaving(false);
+     }
+@@ -256,6 +262,7 @@ export default function PlannrShifts() {
+ 
+       {modal && isDeveloper && (
+         <ShiftModal
++          key={modal.shift?.id ?? "new"}
+           organizationName={selectedOrganization?.name}
+           employees={employees}
+           shift={modal.shift}
+diff --git a/multi-tenant-saas/frontend/src/practice/ShiftCalendar.jsx b/multi-tenant-saas/frontend/src/practice/ShiftCalendar.jsx
+index 789f280..dd1fc0e 100644
+--- a/multi-tenant-saas/frontend/src/practice/ShiftCalendar.jsx
++++ b/multi-tenant-saas/frontend/src/practice/ShiftCalendar.jsx
+@@ -17,9 +17,6 @@ const dayKey = (value) => {
+ const formatTime = (value) =>
+   new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+ 
+-const formatDay = (date) =>
+-  new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric" }).format(date);
+-
+ const statusClass = (status = "scheduled") =>
+   String(status).toLowerCase().replace(/[^a-z0-9-]/g, "-");
+ 
+@@ -117,6 +114,15 @@ export default function ShiftCalendar({
+     date.setDate(firstDay.getDate() + index);
+     return date;
+   });
++  const weekStart = dayKey(days[0]);
++  const weekEndDate = new Date(days[6]);
++  weekEndDate.setDate(weekEndDate.getDate() + 1);
++  const weekEnd = dayKey(weekEndDate);
++  const weekShifts = visibleShifts.filter((shift) => {
++    const key = dayKey(shift.start_time);
++    return key >= weekStart && key < weekEnd;
++  });
++
+   const rows = [...employees];
+   const knownIds = new Set(rows.map((employee) => employee.id));
+   weekShifts.forEach((shift) => {
+@@ -133,15 +139,6 @@ export default function ShiftCalendar({
+     rows.push({ id: "__unassigned__", full_name: "Unassigned shifts", role: "" });
+   }
+ 
+-  const weekStart = dayKey(days[0]);
+-  const weekEndDate = new Date(days[6]);
+-  weekEndDate.setDate(weekEndDate.getDate() + 1);
+-  const weekEnd = dayKey(weekEndDate);
+-  const weekShifts = visibleShifts.filter((shift) => {
+-    const key = dayKey(shift.start_time);
+-    return key >= weekStart && key < weekEnd;
+-  });
+-
+   return (
+     <div className="pln-shifts__week-wrap">
+       {weekShifts.length === 0 && rows.length === 0 ? (
+diff --git a/multi-tenant-saas/frontend/src/practice/ShiftModal.jsx b/multi-tenant-saas/frontend/src/practice/ShiftModal.jsx
+index a145f87..4b5078c 100644
+--- a/multi-tenant-saas/frontend/src/practice/ShiftModal.jsx
++++ b/multi-tenant-saas/frontend/src/practice/ShiftModal.jsx
+@@ -1,4 +1,4 @@
+-import React, { useEffect, useState } from "react";
++import { useState } from "react";
+ import { X, Trash2 } from "lucide-react";
+ 
+ const toDateTimeLocal = (value) => {
+@@ -30,11 +30,6 @@ export default function ShiftModal({
+   const [form, setForm] = useState(() => emptyForm(shift || initialValues));
+   const [error, setError] = useState("");
+ 
+-  useEffect(() => {
+-    setForm(emptyForm(shift || initialValues));
+-    setError("");
+-  }, [shift, initialValues]);
+-
+   const update = (event) => {
+     const { name, value } = event.target;
+     setForm((current) => ({ ...current, [name]: value }));
+diff --git a/multi-tenant-saas/frontend/src/practice/Sidebar.jsx b/multi-tenant-saas/frontend/src/practice/Sidebar.jsx
+index 2419535..53ce131 100644
+--- a/multi-tenant-saas/frontend/src/practice/Sidebar.jsx
++++ b/multi-tenant-saas/frontend/src/practice/Sidebar.jsx
+@@ -1,4 +1,4 @@
+-import React, { useEffect, useState } from "react";
++import { useEffect, useState } from "react";
+ import {
+   LayoutDashboard,
+   CalendarDays,
+@@ -126,7 +126,11 @@ export default function Sidebar({ isOpen, onClose, activeNav = "Shifts" }) {
+                   className={`pl-nav-item ${active ? "is-active" : ""}`}
+                   type="button"
+                   onClick={() => {
+-                    navigate(path);
++                    navigate(
++                      path.startsWith("/admin2")
++                        ? { pathname: path, search: searchParams.toString() }
++                        : path
++                    );
+                     onClose?.();
+                   }}
+                 >
+diff --git a/multi-tenant-saas/frontend/src/practice/Timesheets.jsx b/multi-tenant-saas/frontend/src/practice/Timesheets.jsx
+index 385b68f..d02eb3a 100644
+--- a/multi-tenant-saas/frontend/src/practice/Timesheets.jsx
++++ b/multi-tenant-saas/frontend/src/practice/Timesheets.jsx
+@@ -1,8 +1,6 @@
+-import React, { useState, useMemo } from "react";
++import { useState, useMemo } from "react";
+ import {
+   Clock3,
+-  Search,
+-  Download,
+   ChevronDown,
+   CalendarDays,
+   Check,
+@@ -198,7 +196,7 @@ function TimecardRow({ row, onInspect }) {
+ export default function PlannrTimesheets() {
+   const [rows, setRows] = useState(INITIAL_ROWS);
+   const [activeTab, setActiveTab] = useState("Current Period");
+-  const [searchQuery, setSearchQuery] = useState("");
++  const searchQuery = ""; // TODO: no search input is wired to this page yet
+   const [onlyExceptions, setOnlyExceptions] = useState(false);
+ 
+   // Modals state
+@@ -257,7 +255,7 @@ export default function PlannrTimesheets() {
+       <div className="pt-tabs">
+         {[
+           "Current Period",
+-          "Pending Approval (6)",
++          `Pending Approval (${pendingCount})`,
+           "Approved Logs",
+           "Overtime & Discrepancies",
+         ].map((tab) => (
+diff --git a/multi-tenant-saas/frontend/src/practice/TopBar.jsx b/multi-tenant-saas/frontend/src/practice/TopBar.jsx
+index d124562..9df17f6 100644
+--- a/multi-tenant-saas/frontend/src/practice/TopBar.jsx
++++ b/multi-tenant-saas/frontend/src/practice/TopBar.jsx
+@@ -1,4 +1,3 @@
+-import React from "react";
+ import { Search, Plus, Bell, ChevronDown, Menu } from "lucide-react";
+ import { useAuth } from "../context/authContext";
+ import "./TopBar.css";
