@@ -1,9 +1,12 @@
 import express from "express";
 import { authenticateToken } from "../middleware/auth.middleware.js";
-import { getTodayPunctuality } from "../controllers/punctualityController.js";
+import {
+  getAttendance,
+  
+} from "../controllers/punctualityController.js";
 
 const router = express.Router();
 
-router.get("/today", authenticateToken, getTodayPunctuality);
+router.get("/all", authenticateToken, getAttendance);
 
 export default router;

@@ -8,12 +8,11 @@ import {
   X,
 } from "lucide-react";
 import "./PlannrDashboard.css";
-import { SubTabs } from "./DashboardComponents/SubTabs";
 import { KpiCard } from "./DashboardComponents/KpiCard";
-import { LaborChart } from "./DashboardComponents/LaborChart";
 import { PendingApprovals } from "./DashboardComponents/PendingApprovals";
 import { Punctuality } from "./DashboardComponents/Punctuality";
 import { useShifts } from "../hooks/useShifts";
+import { usePunctuality } from "../hooks/usePunctuality";
 
 const INITIAL_APPROVALS = [
   {
@@ -47,40 +46,40 @@ export default function PlannrDashboard() {
   const [approvals, setApprovals] = useState(INITIAL_APPROVALS);
   const [isQuickShiftOpen, setIsQuickShiftOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-  const { shifts } = useShifts();
+  const { shifts, shiftsCounts } = useShifts();
+  const { summary } = usePunctuality();
   const handleConfirmApproveAll = () => {
     setApprovals([]);
     setIsApproveModalOpen(false);
   };
-const today = new Date();
+  const today = new Date();
 
-const activeToday = shifts.filter((shift) => {
-  const start = new Date(shift.start_time);
-  const end = new Date(shift.end_time);
+  const activeToday = shifts.filter((shift) => {
+    const start = new Date(shift.start_time);
+    const end = new Date(shift.end_time);
 
-  const startOfToday = new Date(today);
-  startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = new Date(today);
+    startOfToday.setHours(0, 0, 0, 0);
 
-  const startOfTomorrow = new Date(startOfToday);
-  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    const startOfTomorrow = new Date(startOfToday);
+    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
 
-  const overlapsToday =
-    start < startOfTomorrow && end > startOfToday;
+    const overlapsToday = start < startOfTomorrow && end > startOfToday;
 
-  return overlapsToday && shift.status === "scheduled";
-}).length;
-const weeklyHours = shifts.reduce((total, shift) => {
-  const start = new Date(shift.start_time);
-  const end = new Date(shift.end_time);
+    return overlapsToday && shift.status === "scheduled";
+  }).length;
+  const weeklyHours = shifts.reduce((total, shift) => {
+    const start = new Date(shift.start_time);
+    const end = new Date(shift.end_time);
 
-  const hours = (end - start) / (1000 * 60 * 60);
+    const hours = (end - start) / (1000 * 60 * 60);
 
-  return total + hours;
-}, 0);
+    return total + hours;
+  }, 0);
 
   return (
     <>
-      <SubTabs activeSubTab={activeSubTab} setActiveSubTab={setActiveSubTab} />
+      {/* <SubTabs activeSubTab={activeSubTab} setActiveSubTab={setActiveSubTab} /> */}
 
       <div className="pd-content">
         <div className="pd-kpis">
@@ -106,25 +105,25 @@ const weeklyHours = shifts.reduce((total, shift) => {
           <KpiCard
             icon={DollarSign}
             title="Labor Cost"
-            value="$12,450"
-            suffix="/ $15,000"
-            note="83% budget utilized"
+            value={summary.total_labor_cost}
+            suffix={`/${summary.scheduled_labor_cost}`}
+            note={`${Math.round((summary.total_labor_cost / summary.scheduled_labor_cost) * 100)}% budget utilized`}
           >
             <div className="pd-cost-bar">
               <span />
             </div>
           </KpiCard>
+
           <KpiCard
             icon={TriangleAlert}
             title="Open Shifts"
-            value="Not available"
-            note="Open-shift count is not returned by the current shifts hook"
+            value={shiftsCounts.unassigned_shifts ?? 0}
+            note={`${shiftsCounts.assigned_shifts ?? 0} assigned shifts`}
             tone="alert"
           />
         </div>
 
         <div className="pd-dashboard-grid">
-          <LaborChart />
           <Punctuality />
           <PendingApprovals
             approvals={approvals}

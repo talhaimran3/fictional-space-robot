@@ -7,12 +7,16 @@ const EMPTY_SUMMARY = {
   absent: 0,
   awaiting_clock_in: 0,
   evaluated: 0,
-  percentages: { punctual: 0, late: 0, absent: 0 },
+  total_labor_cost: 0,
+  percentages: {
+    punctual: 0,
+    late: 0,
+    absent: 0,
+  },
 };
 
 export function usePunctuality() {
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
-  const [date, setDate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -23,29 +27,42 @@ export function usePunctuality() {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiClient.get("/punctuality/today");
+
+        // Fetch overall attendance, not just today's attendance.
+        const response = await apiClient.get("/punctuality/all");
+        console.log("response usePunctuality : ", response);
         if (!active) return;
 
-        setSummary({ ...EMPTY_SUMMARY, ...(response.data?.data || {}) });
-        setDate(response.data?.date || null);
+        setSummary({
+          ...EMPTY_SUMMARY,
+          ...(response.data?.data || {}),
+          percentages: {
+            ...EMPTY_SUMMARY.percentages,
+            ...(response.data?.data?.percentages || {}),
+          },
+        });
       } catch (requestError) {
         if (!active) return;
+
         setError(
           requestError?.response?.data?.error ||
             requestError?.response?.data?.message ||
             requestError.message ||
-            "Unable to load punctuality data.",
+            "Unable to load attendance data.",
         );
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     loadPunctuality();
+
     return () => {
       active = false;
     };
   }, []);
 
-  return { summary, date, loading, error };
+  return { summary, loading, error };
 }
