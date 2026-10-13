@@ -17,9 +17,11 @@ export const addShifts = async (req, res) => {
         error: "start_time and end_time are required.",
       });
     }
-    if (new Date(start_time) >= new Date(end_time)) {
+    if (Number.isNaN(new Date(start_time).getTime()) ||
+        Number.isNaN(new Date(end_time).getTime()) ||
+        new Date(start_time) >= new Date(end_time)) {
       return res.status(400).json({
-        error: "start_time must be earlier than end_time.",
+        error: "Choose valid start and end times, with the end after the start.",
       });
     }
 
@@ -36,7 +38,7 @@ export const addShifts = async (req, res) => {
       end_time,
       status,
       notes,
-      name.trim() || "Scheduled Shift",
+      String(name || "Scheduled Shift").trim() || "Scheduled Shift",
       req.user.id,
     ]);
 
@@ -46,16 +48,13 @@ export const addShifts = async (req, res) => {
     });
   } catch (error) {
     console.error("Failed to add shift:", error);
-    if (error.code === "22P02") {
-      return res.status(400).json({ error: "Invalid UUID or field format." });
+    if (error.code === "22P02" || error.code === "23514") {
+      return res.status(400).json({ error: "Invalid shift data. Check UUIDs, status and times." });
     }
     if (error.code === "23503") {
       return res.status(400).json({
         error: "The selected employee or project does not belong to this organization.",
       });
-    }
-    if (error.code === "22P02" || error.code === "23514" || error.code === "22P02") {
-      return res.status(400).json({ error: "Invalid shift data." });
     }
     return res.status(500).json({ error: "Internal server error" });
   }
@@ -137,9 +136,11 @@ export const updateShift = async (req, res, next) => {
         error: "start_time and end_time are required.",
       });
     }
-    if (new Date(start_time) >= new Date(end_time)) {
+    if (Number.isNaN(new Date(start_time).getTime()) ||
+        Number.isNaN(new Date(end_time).getTime()) ||
+        new Date(start_time) >= new Date(end_time)) {
       return res.status(400).json({
-        error: "start_time must be earlier than end_time.",
+        error: "Choose valid start and end times, with the end after the start.",
       });
     }
 
@@ -157,7 +158,7 @@ export const updateShift = async (req, res, next) => {
     `;
     const result = await db.query(query, [
       employee_id || null,
-      name.trim() || "Scheduled Shift",
+      String(name || "Scheduled Shift").trim() || "Scheduled Shift",
       start_time,
       end_time,
       status,
