@@ -1,4 +1,4 @@
-import Router from "express";
+import express from "express";
 import { getAllorganizations } from "../controllers/adminController.js";
 import { getorganizationById } from "../controllers/organizationController.js";
 import {
@@ -14,9 +14,9 @@ import {
   requireDeveloper,
 } from "../middleware/shiftAccess.middleware.js";
 
-const router = Router();
+const router = express.Router();
 
-// This list is scoped: developers see all; other users see their own organization.
+// Developers see all organizations; other users see only their own organization.
 router.get("/all", authenticateToken, getAllorganizations);
 router.get("/:id", authenticateToken, allowOrganizationShiftRead, getorganizationById);
 router.get("/:id/all-shifts", authenticateToken, allowOrganizationShiftRead, getShifts);
