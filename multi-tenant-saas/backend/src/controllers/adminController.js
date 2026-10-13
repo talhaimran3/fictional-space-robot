@@ -4,7 +4,8 @@ dotenv.config();
 
 export const addorganization = async (req, res) => {
   try {
-    const { name, slug, created_by } = req.body;
+    const { name, slug } = req.body;
+    const created_by = req.user.id;
 
     const queryText = `
       INSERT INTO organizations (name, slug, created_by)
@@ -12,12 +13,7 @@ export const addorganization = async (req, res) => {
       RETURNING id, name, slug, created_by, created_at;
     `;
 
-    const { rows } = await db.query(queryText, [
-      name,
-      slug,
-      created_by || null,
-    ]);
-
+    const { rows } = await db.query(queryText, [name, slug, created_by]);
     res.status(201).json({ data: rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -30,14 +26,9 @@ export const editOrganization = async (req, res) => {
     const { id } = req.params;
     const { name, slug } = req.body;
 
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const queryText = `
       UPDATE organizations
-      SET name = $1,
-          slug = $2
+      SET name = $1, slug = $2
       WHERE id = $3::uuid
       RETURNING id, name, slug, created_by, created_at;
     `;
@@ -57,6 +48,9 @@ export const editOrganization = async (req, res) => {
 
 export const getAllorganizations = async (req, res) => {
   try {
+    const isDeveloper = req.user.role === "developer";
+    const organizationId = req.user.organizationId || null;
+
     const queryText = `
       SELECT
         o.id,
@@ -65,7 +59,18 @@ export const getAllorganizations = async (req, res) => {
         o.created_by,
         o.created_at,
         COALESCE(
-          (SELECT json_agg(u.*) FROM users u WHERE u.organization_id = o.id),
+          (
+            SELECT json_agg(jsonb_build_object(
+              'id', u.id,
+              'email', u.email,
+              'full_name', u.full_name,
+              'role', u.role,
+              'organization_id', u.organization_id,
+              'status', u.status
+            ))
+            FROM users u
+            WHERE u.organization_id = o.id
+          ),
           '[]'::json
         ) AS members,
         COALESCE(
@@ -73,10 +78,11 @@ export const getAllorganizations = async (req, res) => {
           '[]'::json
         ) AS shifts
       FROM organizations o
+      WHERE ($1::boolean = TRUE OR o.id = $2::uuid)
       ORDER BY o.created_at DESC;
     `;
 
-    const { rows } = await db.query(queryText);
+    const { rows } = await db.query(queryText, [isDeveloper, organizationId]);
     res.json({ data: rows });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -86,21 +92,16 @@ export const getAllorganizations = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
+    const isDeveloper = req.user.role === "developer";
+    const organizationId = req.user.organizationId || null;
     const queryText = `
-      SELECT
-        id,
-        email,
-        full_name,
-        role,
-        organization_id,
-        created_at,
-        updated_at
-        -- deliberately omit password_hash
+      SELECT id, email, full_name, role, organization_id, created_at, updated_at
       FROM users
+      WHERE ($1::boolean = TRUE OR organization_id = $2::uuid)
       ORDER BY created_at DESC;
     `;
 
-    const result = await db.query(queryText);
+    const result = await db.query(queryText, [isDeveloper, organizationId]);
     res.json({ data: result.rows });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -110,28 +111,27 @@ export const getAllUsers = async (req, res) => {
 
 export const getAllShifts = async (req, res) => {
   try {
+    const isDeveloper = req.user.role === "developer";
+    const organizationId = req.user.organizationId || null;
     const queryText = `
-      SELECT
-        s.*,
-        u.full_name AS employee_name,
-        u.email AS employee_email,
-        u.role AS employee_role
+      SELECT s.*, u.full_name AS employee_name, u.email AS employee_email,
+             u.role AS employee_role
       FROM shifts s
       LEFT JOIN users u ON u.id = s.employee_id
+      WHERE ($1::boolean = TRUE OR s.organization_id = $2::uuid)
       ORDER BY s.start_time ASC;
     `;
-    const countsResult = await db.query(
-      `SELECT
-        COUNT(*) FILTER (
-          WHERE employee_id IS NULL AND status != 'cancelled'
-        ) AS unassigned_shifts,
-        COUNT(*) FILTER (
-          WHERE employee_id IS NOT NULL AND status != 'cancelled'
-        ) AS assigned_shifts
+    const countsQuery = `
+      SELECT
+        COUNT(*) FILTER (WHERE employee_id IS NULL AND status != 'cancelled') AS unassigned_shifts,
+        COUNT(*) FILTER (WHERE employee_id IS NOT NULL AND status != 'cancelled') AS assigned_shifts
       FROM shifts
-     `,
-    );
-    const result = await db.query(queryText);
+      WHERE ($1::boolean = TRUE OR organization_id = $2::uuid);
+    `;
+    const [result, countsResult] = await Promise.all([
+      db.query(queryText, [isDeveloper, organizationId]),
+      db.query(countsQuery, [isDeveloper, organizationId]),
+    ]);
     res.json({ data: result.rows, counts: countsResult.rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
