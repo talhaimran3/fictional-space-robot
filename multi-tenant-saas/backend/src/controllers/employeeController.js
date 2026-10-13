@@ -35,10 +35,10 @@ export const getAllEmployees = async (req, res) => {
 export const addEmployee = async (req, res) => {
   const { organization_id, name, email, role = "staff", password } = req.body;
 
-  if (!organization_id || !name?.trim() || !email?.trim()) {
+  if (!organization_id || !name?.trim() || !email?.trim() || !password) {
     return res.status(400).json({
       success: false,
-      message: "Organization, name and email are required.",
+      message: "Organization, name, email and password are required.",
     });
   }
 
@@ -59,10 +59,7 @@ export const addEmployee = async (req, res) => {
       return res.status(409).json({ success: false, message: "A user with this email already exists." });
     }
 
-    const hashed = password
-      ? await (await import("bcryptjs")).hash(password, 10)
-      : null;
-
+    const hashed = await (await import("bcryptjs")).hash(password, 10);
     const result = await db.query(
       `INSERT INTO users (email, password_hash, password, full_name, role, organization_id)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -82,6 +79,9 @@ export const addEmployee = async (req, res) => {
     console.error("Error adding user:", error);
     if (error.code === "22P02") {
       return res.status(400).json({ success: false, message: "Invalid organization or role." });
+    }
+    if (error.code === "23505") {
+      return res.status(409).json({ success: false, message: "A user with this email already exists." });
     }
     return res.status(500).json({
       success: false,
