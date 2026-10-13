@@ -24,11 +24,7 @@ const NAV_ITEMS = [
   { label: "Organizations", icon: Building2, path: "/admin/organizations" },
 ];
 
-export default function Sidebar({
-  isOpen,
-  onClose,
-  activeNav = "Shifts",
-}) {
+export default function Sidebar({ isOpen, onClose, activeNav = "Shifts" }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
@@ -64,6 +60,7 @@ export default function Sidebar({
       return next;
     });
     setIsOrgMenuOpen(false);
+    onClose?.();
   };
 
   return (
@@ -150,13 +147,8 @@ export default function Sidebar({
             <strong>A little help?</strong>
           </div>
           <p>Your team, running smoothly. We’re here if you need us.</p>
-          <button
-            type="button"
-            className="pl-help-link"
-            onClick={() => alert("Help Center")}
-          >
-            Visit help center
-            <ArrowUpRight size={14} />
+          <button type="button" className="pl-help-link" onClick={() => alert("Help Center")}>
+            Visit help center <ArrowUpRight size={14} />
           </button>
         </div>
 
