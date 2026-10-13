@@ -16,19 +16,6 @@ const startOfWeek = (date) => {
   return result;
 };
 
-const formatDateKey = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const toLocalInputValue = (date) => {
-  const value = new Date(date);
-  const offset = value.getTimezoneOffset() * 60000;
-  return new Date(value.getTime() - offset).toISOString().slice(0, 16);
-};
-
 const rangeLabel = (view, date) => {
   if (view === "month") {
     return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(date);
@@ -54,7 +41,6 @@ export default function PlannrShifts() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [actionError, setActionError] = useState("");
   const isDeveloper = user?.role === "developer";
 
   useEffect(() => {
@@ -91,7 +77,6 @@ export default function PlannrShifts() {
     start.setHours(9, 0, 0, 0);
     const end = new Date(date);
     end.setHours(17, 0, 0, 0);
-    setActionError("");
     setModal({
       shift: null,
       initialValues: {
@@ -106,7 +91,6 @@ export default function PlannrShifts() {
 
   const openEditShift = (shift) => {
     if (!isDeveloper) return;
-    setActionError("");
     setModal({ shift, initialValues: {} });
   };
 
@@ -115,7 +99,6 @@ export default function PlannrShifts() {
     if (!organizationId) throw new Error("Select an organization first.");
 
     setSaving(true);
-    setActionError("");
     try {
       const headers = { Authorization: `Bearer ${localStorage.getItem("token") || ""}` };
       if (modal.shift) {
@@ -134,8 +117,7 @@ export default function PlannrShifts() {
       setModal(null);
       refetch();
     } catch (error) {
-      const message = error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to save shift.";
-      throw new Error(message);
+      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to save shift.");
     } finally {
       setSaving(false);
     }
@@ -146,7 +128,6 @@ export default function PlannrShifts() {
     if (!window.confirm("Delete this shift permanently?")) return;
 
     setSaving(true);
-    setActionError("");
     try {
       await apiClient.delete(
         `/organizations/${encodeURIComponent(organizationId)}/delete-shift/${encodeURIComponent(modal.shift.id)}`,
@@ -155,13 +136,13 @@ export default function PlannrShifts() {
       setModal(null);
       refetch();
     } catch (error) {
-      setActionError(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to delete shift.");
+      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to delete shift.");
     } finally {
       setSaving(false);
     }
   };
 
-  const shiftError = organizationsError || shiftsError || actionError;
+  const shiftError = organizationsError || shiftsError;
 
   return (
     <section className="pln-shifts">
