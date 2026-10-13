@@ -3,7 +3,7 @@ import { useAuth } from "../context/authContext";
 import apiClient from "../api/client";
 
 export const useOrganizations = () => {
-  const [organizations, setOrganizations] = useState([]);
+  const [result, setResult] = useState({ token: null, organizations: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { token } = useAuth();
@@ -13,8 +13,9 @@ export const useOrganizations = () => {
 
     const fetchOrganizations = async () => {
       if (!token) {
-        setOrganizations([]);
+        setResult({ token: null, organizations: [] });
         setLoading(false);
+        setError(null);
         return;
       }
 
@@ -25,17 +26,20 @@ export const useOrganizations = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!cancelled) {
-          setOrganizations(response.data?.data || []);
+          setResult({
+            token,
+            organizations: response.data?.data || [],
+          });
         }
       } catch (fetchError) {
         if (!cancelled) {
+          setResult({ token, organizations: [] });
           setError(
             fetchError?.response?.data?.error ||
               fetchError?.response?.data?.message ||
               fetchError.message ||
               "Unable to load organizations."
           );
-          setOrganizations([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -48,5 +52,11 @@ export const useOrganizations = () => {
     };
   }, [token]);
 
-  return { organizations, loading, error };
+  // Do not carry tenant names/staff data between sessions while a new token loads.
+  const resultMatchesSession = result.token === token;
+  return {
+    organizations: resultMatchesSession ? result.organizations : [],
+    loading: loading || (Boolean(token) && !resultMatchesSession),
+    error,
+  };
 };
