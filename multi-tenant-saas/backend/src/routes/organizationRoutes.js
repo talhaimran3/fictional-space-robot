@@ -1,8 +1,5 @@
 import Router from "express";
-import {
-  getAllorganizations,
-  getorganizationById,
-} from "../controllers/organizationController.js";
+import { getAllorganizations, getorganizationById } from "../controllers/organizationController.js";
 import {
   addShifts,
   deleteShift,
