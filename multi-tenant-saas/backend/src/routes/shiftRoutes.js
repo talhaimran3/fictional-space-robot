@@ -1,12 +1,11 @@
-//multi-tenant-saas/backend/src/routes/shiftRoutes.js
-import Router from "express";
+import express from "express";
 import { resolveTenant } from "../middleware/resolveTenantMidlleware.js";
-import { addShifts, getorganizationsWithShifts, getShifts } from "../controllers/shiftController.js";
+import { getorganizationsWithShifts, getShifts } from "../controllers/shiftController.js";
+import { authenticateToken } from "../middleware/auth.middleware.js";
 
-const router = Router();
+const router = express.Router();
 
-// Apply the tenant protection middleware specifically to these routes
-router.get("/", resolveTenant, getShifts);
-router.get("/all", getorganizationsWithShifts);
+router.get("/", authenticateToken, resolveTenant, getShifts);
+router.get("/all", authenticateToken, getorganizationsWithShifts);
 
 export default router;
