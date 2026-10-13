@@ -831,3 +831,85 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+
+/* Month view is the weekly staff rota extended across the selected month. */
+.pln-shifts__week-wrap--month {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior-x: contain;
+}
+
+.pln-shifts__week-grid--month {
+  width: max-content;
+  min-width: 100%;
+}
+
+.pln-shifts__week-grid--month > div {
+  min-width: 0;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-day-head {
+  min-width: 112px;
+  min-height: 58px;
+  gap: 3px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-day-head span {
+  font-size: 9px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-day-head strong {
+  font-size: 15px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-cell {
+  min-width: 112px;
+  min-height: 100px;
+  padding: 6px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-employee {
+  min-height: 100px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 1px solid #dfe7f0;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__week-staff-head {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #f8faff;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__event {
+  padding: 6px;
+  gap: 3px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__event strong,
+.pln-shifts__week-grid--month .pln-shifts__event span {
+  font-size: 9px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__event small {
+  font-size: 8px;
+}
+
+.pln-shifts__week-grid--month .pln-shifts__add-slot {
+  opacity: 1;
+  min-height: 30px;
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .pln-shifts__week-grid--month .pln-shifts__week-day-head {
+    min-width: 108px;
+  }
+
+  .pln-shifts__week-grid--month .pln-shifts__week-cell {
+    min-width: 108px;
+  }
+}
