@@ -7,7 +7,7 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const registerUser = async (req, res) => {
-  const { email, password, name, organization_id, role = "staff" } = req.body;
+  const { email, password, name } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -15,17 +15,12 @@ export const registerUser = async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    // Public registration cannot assign its own tenant or privileged role.
     const result = await db.query(
       `INSERT INTO users (email, password, full_name, role, organization_id)
-       VALUES ($1, $2, $3, $4, $5)
+       VALUES ($1, $2, $3, 'staff', NULL)
        RETURNING id, email, full_name, role, organization_id`,
-      [
-        email.trim().toLowerCase(),
-        hashedPassword,
-        name.trim(),
-        role,
-        organization_id || null,
-      ]
+      [email.trim().toLowerCase(), hashedPassword, name.trim()]
     );
 
     res.status(201).json({
