@@ -1,35 +1,51 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
 import apiClient from "../api/client";
-import { useEffect, useState } from "react";
 
 export const useOrganizations = () => {
-  const [organizations, setorganizations] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { token } = useAuth();
 
   useEffect(() => {
-    const fetchorganizations = async () => {
-      try {
-        const res = await apiClient.get("/admin/organizations/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        console.log('fetched organizations : ', res.data.data)
-        setorganizations(res.data.data || []);
-      } catch (error) {
-        setError("Error fetching organizations");
-        console.error("Error fetching organizations:", error);
-      } finally {
+    let cancelled = false;
+
+    const fetchOrganizations = async () => {
+      if (!token) {
+        setOrganizations([]);
         setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiClient.get("/admin/organizations/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!cancelled) {
+          setOrganizations(response.data?.data || []);
+        }
+      } catch (fetchError) {
+        if (!cancelled) {
+          setError(
+            fetchError?.response?.data?.error ||
+              fetchError?.response?.data?.message ||
+              fetchError.message ||
+              "Unable to load organizations."
+          );
+          setOrganizations([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
 
-    if (token) {
-      fetchorganizations();
-    }
+    fetchOrganizations();
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   return { organizations, loading, error };
