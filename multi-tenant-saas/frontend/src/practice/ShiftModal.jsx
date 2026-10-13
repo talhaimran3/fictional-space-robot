@@ -66,6 +66,15 @@ export default function ShiftModal({
     }
   };
 
+  const deleteShift = async () => {
+    setError("");
+    try {
+      await onDelete?.();
+    } catch (deleteError) {
+      setError(deleteError?.message || "Could not delete this shift.");
+    }
+  };
+
   return (
     <div className="pln-shifts__modal-backdrop" onMouseDown={onClose}>
       <section
@@ -88,12 +97,12 @@ export default function ShiftModal({
         <form className="pln-shifts__modal-form" onSubmit={submit}>
           <label>
             Shift name
-            <input name="name" value={form.name} onChange={update} maxLength={255} required />
+            <input name="name" value={form.name} onChange={update} maxLength={255} required disabled={saving} />
           </label>
 
           <label>
             Staff member
-            <select name="employee_id" value={form.employee_id} onChange={update}>
+            <select name="employee_id" value={form.employee_id} onChange={update} disabled={saving}>
               <option value="">Unassigned</option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>
@@ -106,17 +115,17 @@ export default function ShiftModal({
           <div className="pln-shifts__form-row">
             <label>
               Starts
-              <input type="datetime-local" name="start_time" value={form.start_time} onChange={update} required />
+              <input type="datetime-local" name="start_time" value={form.start_time} onChange={update} required disabled={saving} />
             </label>
             <label>
               Ends
-              <input type="datetime-local" name="end_time" value={form.end_time} onChange={update} required />
+              <input type="datetime-local" name="end_time" value={form.end_time} onChange={update} required disabled={saving} />
             </label>
           </div>
 
           <label>
             Status
-            <select name="status" value={form.status} onChange={update}>
+            <select name="status" value={form.status} onChange={update} disabled={saving}>
               <option value="scheduled">Scheduled</option>
               <option value="in_progress">In progress</option>
               <option value="completed">Completed</option>
@@ -127,7 +136,7 @@ export default function ShiftModal({
 
           <label>
             Notes
-            <textarea name="notes" value={form.notes} onChange={update} rows={3} maxLength={5000} />
+            <textarea name="notes" value={form.notes} onChange={update} rows={3} maxLength={5000} disabled={saving} />
           </label>
 
           {error && <p className="pln-shifts__form-error" role="alert">{error}</p>}
@@ -138,7 +147,7 @@ export default function ShiftModal({
                 type="button"
                 className="pln-shifts__button pln-shifts__button--danger"
                 disabled={saving}
-                onClick={onDelete}
+                onClick={deleteShift}
               >
                 <Trash2 size={16} /> Delete
               </button>
