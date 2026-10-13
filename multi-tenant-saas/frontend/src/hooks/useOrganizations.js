@@ -25,6 +25,7 @@ export const useOrganizations = () => {
         const response = await apiClient.get("/admin/organizations/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("useOrganizations response:", response);
         if (!cancelled) {
           setResult({
             token,

@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  RefreshCw,
+} from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import apiClient from "../api/client";
@@ -18,7 +24,10 @@ const startOfWeek = (date) => {
 
 const rangeLabel = (view, date) => {
   if (view === "month") {
-    return new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(date);
+    return new Intl.DateTimeFormat(undefined, {
+      month: "long",
+      year: "numeric",
+    }).format(date);
   }
   const start = startOfWeek(date);
   const end = new Date(start);
@@ -32,11 +41,22 @@ const rangeLabel = (view, date) => {
 
 export default function PlannrShifts() {
   const { user } = useAuth();
-  const { organizations, loading: organizationsLoading, error: organizationsError } = useOrganizations();
+  const {
+    organizations,
+    loading: organizationsLoading,
+    error: organizationsError,
+  } = useOrganizations();
   const [searchParams, setSearchParams] = useSearchParams();
   const organizationId = searchParams.get("organizationId") || "";
-  const selectedOrganization = organizations.find((organization) => organization.id === organizationId);
-  const { shifts, loading: shiftsLoading, error: shiftsError, refetch } = useShifts(organizationId);
+  const selectedOrganization = organizations.find(
+    (organization) => organization.id === organizationId,
+  );
+  const {
+    shifts,
+    loading: shiftsLoading,
+    error: shiftsError,
+    refetch,
+  } = useShifts(organizationId);
   const [view, setView] = useState("week");
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [modal, setModal] = useState(null);
@@ -45,22 +65,37 @@ export default function PlannrShifts() {
 
   useEffect(() => {
     if (organizationsLoading || organizations.length === 0) return;
-    if (organizations.some((organization) => organization.id === organizationId)) return;
+    if (
+      organizations.some((organization) => organization.id === organizationId)
+    )
+      return;
 
     const userOrganizationId = user?.organization_id || user?.organizationId;
-    const fallback = organizations.find((organization) => organization.id === userOrganizationId) || organizations[0];
+    const fallback =
+      organizations.find(
+        (organization) => organization.id === userOrganizationId,
+      ) || organizations[0];
     if (!fallback) return;
 
-    setSearchParams((current) => {
-      const next = new URLSearchParams(current);
-      next.set("organizationId", fallback.id);
-      return next;
-    }, { replace: true });
-  }, [organizations, organizationsLoading, organizationId, setSearchParams, user]);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.set("organizationId", fallback.id);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [
+    organizations,
+    organizationsLoading,
+    organizationId,
+    setSearchParams,
+    user,
+  ]);
 
   const employees = useMemo(
     () => selectedOrganization?.members || [],
-    [selectedOrganization]
+    [selectedOrganization],
   );
 
   const navigateDate = (direction) => {
@@ -100,24 +135,31 @@ export default function PlannrShifts() {
 
     setSaving(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem("token") || ""}` };
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      };
       if (modal.shift) {
         await apiClient.put(
           `/organizations/${encodeURIComponent(organizationId)}/edit-shift/${encodeURIComponent(modal.shift.id)}`,
           payload,
-          { headers }
+          { headers },
         );
       } else {
         await apiClient.post(
           `/organizations/${encodeURIComponent(organizationId)}/add-shift`,
           payload,
-          { headers }
+          { headers },
         );
       }
       setModal(null);
       refetch();
     } catch (error) {
-      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to save shift.");
+      throw new Error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error.message ||
+          "Unable to save shift.",
+      );
     } finally {
       setSaving(false);
     }
@@ -131,12 +173,21 @@ export default function PlannrShifts() {
     try {
       await apiClient.delete(
         `/organizations/${encodeURIComponent(organizationId)}/delete-shift/${encodeURIComponent(modal.shift.id)}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        },
       );
       setModal(null);
       refetch();
     } catch (error) {
-      throw new Error(error?.response?.data?.error || error?.response?.data?.message || error.message || "Unable to delete shift.");
+      throw new Error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error.message ||
+          "Unable to delete shift.",
+      );
     } finally {
       setSaving(false);
     }
@@ -157,10 +208,14 @@ export default function PlannrShifts() {
           </p>
         </div>
         <div className="pln-shifts__heading-meta">
-          <span className={`pln-shifts__access ${isDeveloper ? "is-developer" : ""}`}>
+          <span
+            className={`pln-shifts__access ${isDeveloper ? "is-developer" : ""}`}
+          >
             {isDeveloper ? "Developer access" : "Read-only"}
           </span>
-          <span className="pln-shifts__count">{shifts.length} {shifts.length === 1 ? "shift" : "shifts"}</span>
+          <span className="pln-shifts__count">
+            {shifts.length} {shifts.length === 1 ? "shift" : "shifts"}
+          </span>
         </div>
       </header>
 
@@ -181,30 +236,62 @@ export default function PlannrShifts() {
             disabled={organizationsLoading || organizations.length === 0}
             aria-label="Select organization"
           >
-            {organizations.length === 0 && <option value="">No organizations available</option>}
+            {organizations.length === 0 && (
+              <option value="">No organizations available</option>
+            )}
             {organizations.map((organization) => (
-              <option key={organization.id} value={organization.id}>{organization.name}</option>
+              <option key={organization.id} value={organization.id}>
+                {organization.name}
+              </option>
             ))}
           </select>
         </label>
 
         <div className="pln-shifts__date-controls">
-          <button type="button" className="pln-shifts__icon-button" onClick={() => navigateDate(-1)} aria-label={view === "week" ? "Previous week" : "Previous month"}>
+          <button
+            type="button"
+            className="pln-shifts__icon-button"
+            onClick={() => navigateDate(-1)}
+            aria-label={view === "week" ? "Previous week" : "Previous month"}
+          >
             <ChevronLeft size={18} />
           </button>
           <div className="pln-shifts__date-label">
             <CalendarDays size={17} />
             <strong>{rangeLabel(view, currentDate)}</strong>
           </div>
-          <button type="button" className="pln-shifts__icon-button" onClick={() => navigateDate(1)} aria-label={view === "week" ? "Next week" : "Next month"}>
+          <button
+            type="button"
+            className="pln-shifts__icon-button"
+            onClick={() => navigateDate(1)}
+            aria-label={view === "week" ? "Next week" : "Next month"}
+          >
             <ChevronRight size={18} />
           </button>
         </div>
 
         <div className="pln-shifts__toolbar-actions">
-          <div className="pln-shifts__view-toggle" role="group" aria-label="Calendar view">
-            <button type="button" className={view === "week" ? "is-active" : ""} aria-pressed={view === "week"} onClick={() => setView("week")}>Week</button>
-            <button type="button" className={view === "month" ? "is-active" : ""} aria-pressed={view === "month"} onClick={() => setView("month")}>Month</button>
+          <div
+            className="pln-shifts__view-toggle"
+            role="group"
+            aria-label="Calendar view"
+          >
+            <button
+              type="button"
+              className={view === "week" ? "is-active" : ""}
+              aria-pressed={view === "week"}
+              onClick={() => setView("week")}
+            >
+              Week
+            </button>
+            <button
+              type="button"
+              className={view === "month" ? "is-active" : ""}
+              aria-pressed={view === "month"}
+              onClick={() => setView("month")}
+            >
+              Month
+            </button>
           </div>
           <button
             type="button"
@@ -229,10 +316,18 @@ export default function PlannrShifts() {
         </div>
       </div>
 
-      {shiftError && <div className="pln-shifts__error" role="alert">{shiftError}</div>}
-      {!organizationsLoading && organizations.length === 0 && !organizationsError && (
-        <div className="pln-shifts__message">No organizations are available for this account.</div>
+      {shiftError && (
+        <div className="pln-shifts__error" role="alert">
+          {shiftError}
+        </div>
       )}
+      {!organizationsLoading &&
+        organizations.length === 0 &&
+        !organizationsError && (
+          <div className="pln-shifts__message">
+            No organizations are available for this account.
+          </div>
+        )}
       {selectedOrganization && (
         <ShiftCalendar
           view={view}
@@ -245,9 +340,13 @@ export default function PlannrShifts() {
           onAddShift={openNewShift}
         />
       )}
-      {!organizationsLoading && organizations.length > 0 && !selectedOrganization && (
-        <div className="pln-shifts__message">Select an organization to continue.</div>
-      )}
+      {!organizationsLoading &&
+        organizations.length > 0 &&
+        !selectedOrganization && (
+          <div className="pln-shifts__message">
+            Select an organization to continue.
+          </div>
+        )}
 
       <footer className="pln-shifts__footer">
         <span>Schedules are loaded from the selected organization.</span>

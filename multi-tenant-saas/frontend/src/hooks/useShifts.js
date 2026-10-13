@@ -28,28 +28,10 @@ export const useShifts = (organizationId) => {
       try {
         setLoading(true);
         setError(null);
-<<<<<<< HEAD
         const response = await apiClient.get(
           `/organizations/${encodeURIComponent(organizationId)}/all-shifts`,
           { headers: { Authorization: `Bearer ${token}` } }
-=======
 
-        const res = await apiClient.get("/admin/shifts/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("Fetched all shifts : ", res);
-        setShiftsCounts(res.data.counts || []);
-        setShifts(res.data?.data || []);
-      } catch (error) {
-        setError(
-          error?.response?.data?.message ||
-            error.message ||
-            "Unable to load shifts",
->>>>>>> 940b858 (did few edits)
         );
         if (!cancelled) {
           setResult({
@@ -73,7 +55,7 @@ export const useShifts = (organizationId) => {
       }
     };
 
-<<<<<<< HEAD
+
     fetchShifts();
     return () => {
       cancelled = true;
@@ -89,11 +71,5 @@ export const useShifts = (organizationId) => {
     (Boolean(organizationId) && !resultMatchesCurrentSelection);
 
   return { shifts: currentShifts, loading: isLoading, error, refetch };
-=======
-  return {
-    shifts,shiftsCounts,
-    loading,
-    error,
-  };
->>>>>>> 940b858 (did few edits)
+
 };
