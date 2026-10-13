@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   CalendarDays,
-  Wallet,
   Users,
   Building2,
   Settings,
@@ -10,10 +9,11 @@ import {
   ArrowUpRight,
   ChevronsUpDown,
   X,
-  FileText,
   Clock3,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useOrganizations } from "../hooks/useOrganizations";
+import { useAuth } from "../context/authContext";
 import "./Sidebar.css";
 
 const NAV_ITEMS = [
@@ -21,16 +21,50 @@ const NAV_ITEMS = [
   { label: "Shifts", icon: CalendarDays, path: "/admin2/shifts" },
   { label: "Timesheets", icon: Clock3, path: "/admin2/timesheets" },
   { label: "People", icon: Users, path: "/admin2/people" },
-  { label: "Organizations", icon: Building2 },
+  { label: "Organizations", icon: Building2, path: "/admin/organizations" },
 ];
 
 export default function Sidebar({
   isOpen,
   onClose,
   activeNav = "Shifts",
-  onNavClick,
 }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const { organizations, loading: organizationsLoading } = useOrganizations();
+  const [isOrgMenuOpen, setIsOrgMenuOpen] = useState(false);
+  const selectedOrganizationId = searchParams.get("organizationId") || "";
+  const selectedOrganization = organizations.find(
+    (organization) => organization.id === selectedOrganizationId
+  );
+
+  useEffect(() => {
+    if (organizationsLoading || organizations.length === 0) return;
+    if (organizations.some((organization) => organization.id === selectedOrganizationId)) return;
+
+    const userOrganizationId = user?.organization_id || user?.organizationId;
+    const defaultOrganization =
+      organizations.find((organization) => organization.id === userOrganizationId) ||
+      organizations[0];
+
+    if (defaultOrganization) {
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current);
+        next.set("organizationId", defaultOrganization.id);
+        return next;
+      }, { replace: true });
+    }
+  }, [organizations, organizationsLoading, selectedOrganizationId, setSearchParams, user]);
+
+  const selectOrganization = (organizationId) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set("organizationId", organizationId);
+      return next;
+    });
+    setIsOrgMenuOpen(false);
+  };
 
   return (
     <>
@@ -38,30 +72,51 @@ export default function Sidebar({
       <aside className={`pl-sidebar ${isOpen ? "is-open" : ""}`}>
         <div className="pl-brand-row">
           <div className="pl-brand">
-            <div className="pl-brand-mark">
-              p<span />
-            </div>
+            <div className="pl-brand-mark">p<span /></div>
             <strong>plannr</strong>
           </div>
-          <button className="pl-mobile-close" type="button" onClick={onClose}>
+          <button className="pl-mobile-close" type="button" onClick={onClose} aria-label="Close navigation">
             <X size={20} />
           </button>
         </div>
 
-        <button
-          className="pl-org-switcher"
-          type="button"
-          onClick={() => alert("Switch Organization")}
-        >
-          <div className="pl-org-monogram">
-            <Building2 size={16} />
-          </div>
-          <div className="pl-org-copy">
-            <strong>Acme Company</strong>
-            <span>Team workspace</span>
-          </div>
-          <ChevronsUpDown size={14} />
-        </button>
+        <div className="pl-org-switcher-wrap">
+          <button
+            className="pl-org-switcher"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={isOrgMenuOpen}
+            onClick={() => setIsOrgMenuOpen((open) => !open)}
+          >
+            <div className="pl-org-monogram"><Building2 size={16} /></div>
+            <div className="pl-org-copy">
+              <strong>{selectedOrganization?.name || (organizationsLoading ? "Loading…" : "Select organization")}</strong>
+              <span>{selectedOrganization ? "Team workspace" : "No organization selected"}</span>
+            </div>
+            <ChevronsUpDown size={14} />
+          </button>
+
+          {isOrgMenuOpen && (
+            <div className="pl-org-menu" role="listbox" aria-label="Organizations">
+              {organizations.map((organization) => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={organization.id === selectedOrganizationId}
+                  className={organization.id === selectedOrganizationId ? "is-selected" : ""}
+                  key={organization.id}
+                  onClick={() => selectOrganization(organization.id)}
+                >
+                  <strong>{organization.name}</strong>
+                  <span>{organization.slug}</span>
+                </button>
+              ))}
+              {!organizationsLoading && organizations.length === 0 && (
+                <p>No organizations available.</p>
+              )}
+            </div>
+          )}
+        </div>
 
         <nav className="pl-main-nav">
           <div className="pl-nav-label">WORKSPACE</div>
@@ -74,9 +129,8 @@ export default function Sidebar({
                   className={`pl-nav-item ${active ? "is-active" : ""}`}
                   type="button"
                   onClick={() => {
-                    if (path) navigate(path);
-                    if (onNavClick) onNavClick(label);
-                    onClose();
+                    navigate(path);
+                    onClose?.();
                   }}
                 >
                   <Icon size={19} strokeWidth={1.8} />
@@ -106,11 +160,7 @@ export default function Sidebar({
           </button>
         </div>
 
-        <button
-          className="pl-settings-link"
-          type="button"
-          onClick={() => alert("Settings")}
-        >
+        <button className="pl-settings-link" type="button" onClick={() => alert("Settings")}>
           <Settings size={19} />
           <span>Settings</span>
         </button>
