@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Clock3,
   Search,
@@ -15,88 +15,80 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import apiClient from "../api/client";
+import { useAuth } from "../context/authContext";
 import "./Timesheets.css";
 
-const INITIAL_ROWS = [
-  {
-    id: 1,
-    initials: "JH",
-    avatar: "blue",
-    name: "Jerry Helfer",
-    team: "Operations",
-    date: "Aug 05",
-    day: "Mon",
-    scheduled: "8.0h",
-    inTime: "8:58 AM",
-    inState: "On Time",
-    outTime: "5:04 PM",
-    outState: "On Time",
-    worked: "8.1h",
-    variance: "+0.1h",
-    varianceTone: "neutral",
-    status: "Approved",
-    statusTone: "approved",
-  },
-  {
-    id: 2,
-    initials: "BC",
-    avatar: "peach",
-    name: "Bessie C.",
-    team: "Customer Care",
-    date: "Aug 05",
-    day: "Mon",
-    scheduled: "8.0h",
-    inTime: "9:15 AM",
-    inState: "15m Late",
-    inTone: "late",
-    outTime: "5:00 PM",
-    outState: "On Time",
-    worked: "7.75h",
-    variance: "-0.25h",
-    varianceTone: "peach",
-    status: "Flagged",
-    statusTone: "flagged",
-  },
-  {
-    id: 3,
-    initials: "RE",
-    avatar: "purple",
-    name: "Ralph E.",
-    team: "Field Services",
-    date: "Aug 06",
-    day: "Tue",
-    scheduled: "8.0h",
-    inTime: "8:59 AM",
-    inState: "On Time",
-    outTime: "7:01 PM",
-    outState: "2h Overtime",
-    outTone: "overtime",
-    worked: "10.0h",
-    variance: "+2.0h OT",
-    varianceTone: "rose",
-    status: "Pending",
-    statusTone: "pending",
-  },
-  {
-    id: 4,
-    initials: "SM",
-    avatar: "green",
-    name: "Sophia M.",
-    team: "Design",
-    date: "Aug 06",
-    day: "Tue",
-    scheduled: "7.5h",
-    inTime: "9:02 AM",
-    inState: "On Time",
-    outTime: "4:34 PM",
-    outState: "On Time",
-    worked: "7.5h",
-    variance: "+0.0h",
-    varianceTone: "neutral",
-    status: "Approved",
-    statusTone: "approved",
-  },
-];
+function formatDate(value) {
+  if (!value) return { date: "—", day: "—" };
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return { date: "—", day: "—" };
+  return {
+    date: parsed.toLocaleDateString("en-US", { month: "short", day: "2-digit" }),
+    day: parsed.toLocaleDateString("en-US", { weekday: "short" }),
+  };
+}
+
+function formatTime(value) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return parsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function formatHours(value) {
+  return Number.isFinite(value) ? `${value.toFixed(1)}h` : "—";
+}
+
+function buildTimecardRows(shifts) {
+  return shifts.map((shift) => {
+    const start = shift.start_time ? new Date(shift.start_time) : null;
+    const end = shift.end_time ? new Date(shift.end_time) : null;
+    const duration =
+      start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())
+        ? Math.max(0, (end - start) / 3600000)
+        : null;
+    const { date, day } = formatDate(shift.start_time);
+    const name = shift.employee_name || "Unassigned shift";
+    const statusValue = String(shift.status || "scheduled").toLowerCase();
+    const status = ["cancelled", "no_show", "no-show"].includes(statusValue)
+      ? "Flagged"
+      : statusValue === "completed"
+        ? "Pending"
+        : "Pending";
+    const statusTone = status === "Flagged" ? "flagged" : "pending";
+    const initials = name
+      .split(/\\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "—";
+
+    return {
+      id: shift.id,
+      initials,
+      avatar: "blue",
+      name,
+      team: shift.project_name || shift.project || "Operations",
+      date,
+      day,
+      scheduled: formatHours(duration),
+      inTime: "—",
+      inState: "No clock-in data",
+      outTime: "—",
+      outState: "No clock-out data",
+      worked: "—",
+      variance: "—",
+      varianceTone: "neutral",
+      status,
+      statusTone,
+      shiftStatus: statusValue,
+      startTime: formatTime(shift.start_time),
+      endTime: formatTime(shift.end_time),
+    };
+  });
+}
 
 function AuditBar({ onApproveAll, pendingCount }) {
   return (
@@ -196,7 +188,55 @@ function TimecardRow({ row, onInspect }) {
 }
 
 export default function PlannrTimesheets() {
-  const [rows, setRows] = useState(INITIAL_ROWS);
+  const [shifts, setShifts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [statusOverrides, setStatusOverrides] = useState({});
+  const { token } = useAuth();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchShifts = async () => {
+      if (!token) {
+        setShifts([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setLoadError("");
+        const response = await apiClient.get("/admin/shifts/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!cancelled) setShifts(response.data?.data || []);
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(
+            error?.response?.data?.error ||
+              error?.response?.data?.message ||
+              "Unable to load shifts. Please try again."
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchShifts();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const rows = useMemo(
+    () => buildTimecardRows(shifts).map((row) => {
+      const override = statusOverrides[row.id];
+      return override ? { ...row, status: override.status, statusTone: override.statusTone } : row;
+    }),
+    [shifts, statusOverrides]
+  );
   const [activeTab, setActiveTab] = useState("Current Period");
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyExceptions, setOnlyExceptions] = useState(false);
@@ -230,22 +270,23 @@ export default function PlannrTimesheets() {
   );
 
   const handleUpdateStatus = (id, newStatus, newTone) => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: newStatus, statusTone: newTone } : r
-      )
-    );
+    setStatusOverrides((prev) => ({
+      ...prev,
+      [id]: { status: newStatus, statusTone: newTone },
+    }));
     setSelectedTimecard(null);
   };
 
   const handleApproveAllConfirm = () => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.status === "Pending"
-          ? { ...r, status: "Approved", statusTone: "approved" }
-          : r
-      )
-    );
+    setStatusOverrides((prev) => {
+      const next = { ...prev };
+      rows.forEach((row) => {
+        if (row.status === "Pending") {
+          next[row.id] = { status: "Approved", statusTone: "approved" };
+        }
+      });
+      return next;
+    });
     setIsApproveAllModalOpen(false);
   };
 
@@ -309,7 +350,22 @@ export default function PlannrTimesheets() {
                 <span />
               </div>
 
-              {filteredRows.map((row) => (
+              {loading && (
+                <div className="pt-empty-state">
+                  <Clock3 size={24} />
+                  <strong>Loading timecards…</strong>
+                </div>
+              )}
+
+              {!loading && loadError && (
+                <div className="pt-empty-state">
+                  <AlertTriangle size={24} />
+                  <strong>Could not load timecards</strong>
+                  <span>{loadError}</span>
+                </div>
+              )}
+
+              {!loading && !loadError && filteredRows.map((row) => (
                 <TimecardRow
                   key={row.id}
                   row={row}
@@ -317,7 +373,7 @@ export default function PlannrTimesheets() {
                 />
               ))}
 
-              {!filteredRows.length && (
+              {!loading && !loadError && !filteredRows.length && (
                 <div className="pt-empty-state">
                   <Clock3 size={24} />
                   <strong>No timecards found</strong>
