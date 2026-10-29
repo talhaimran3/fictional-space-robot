@@ -19,6 +19,25 @@ import { AddEditFormModal } from "../../components/organizations/AddEditFormModa
 import { AddEditShiftFormModal } from "../../components/shifts/AddEditShiftFormModal.jsx";
 import "./singleOrganizationPage.css";
 
+const formatShiftDuration = (startTime, endTime) => {
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    return "—";
+  }
+
+  const totalMinutes = Math.round((end - start) / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (minutes === 0) return `${hours} hrs`;
+
+  return hours > 0
+    ? `${hours} hrs ${minutes} mins`
+    : `${minutes} mins`;
+};
+
 export const SingleOrganizationPage = () => {
   const { id } = useParams();
 
@@ -366,8 +385,10 @@ export const SingleOrganizationPage = () => {
                       </strong>
                     </div>
                     <div>
-                      <span>Total hours</span>
-                      <strong>{shift.total_hours ?? "—"}</strong>
+                      <span>Duration</span>
+                      <strong>
+                        {formatShiftDuration(shift.start_time, shift.end_time)}
+                      </strong>
                     </div>
                   </div>
                 </div>
@@ -394,9 +415,7 @@ export const SingleOrganizationPage = () => {
                         dateStyle: "medium",
                         timeStyle: "short",
                       })}
-                      {shift.total_hours != null && (
-                        <> · {shift.total_hours} hrs</>
-                      )}
+                      <> · {formatShiftDuration(shift.start_time, shift.end_time)}</>
                     </p>
                   </div>
                 </div>
