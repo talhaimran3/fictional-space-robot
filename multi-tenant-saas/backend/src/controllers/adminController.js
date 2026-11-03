@@ -2,9 +2,30 @@ import db from "../config/database.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+const getOrganizationInput = (req, res) => {
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const slug = typeof req.body?.slug === "string" ? req.body.slug.trim().toLowerCase() : "";
+
+  if (!name || !slug) {
+    res.status(400).json({ error: "Organization name and slug are required." });
+    return null;
+  }
+
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    res.status(400).json({
+      error: "Slug must contain lowercase letters, numbers, and single hyphens.",
+    });
+    return null;
+  }
+
+  return { name, slug };
+};
+
 export const addorganization = async (req, res) => {
   try {
-    const { name, slug } = req.body;
+    const input = getOrganizationInput(req, res);
+    if (!input) return;
+    const { name, slug } = input;
     const created_by = req.user.id;
 
     const queryText = `
@@ -17,6 +38,9 @@ export const addorganization = async (req, res) => {
     res.status(201).json({ data: rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "An organization with this name or slug already exists." });
+    }
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -24,7 +48,9 @@ export const addorganization = async (req, res) => {
 export const editOrganization = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, slug } = req.body;
+    const input = getOrganizationInput(req, res);
+    if (!input) return;
+    const { name, slug } = input;
 
     const queryText = `
       UPDATE organizations
@@ -42,6 +68,9 @@ export const editOrganization = async (req, res) => {
     res.json({ data: result.rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "An organization with this name or slug already exists." });
+    }
     return res.status(500).json({ error: "Internal server error" });
   }
 };
