@@ -855,3 +855,81 @@ button {
     justify-content: center;
   }
 }
+
+
+/* Attendance editor */
+.pt-editor-modal {
+  width: min(680px, 100%);
+  max-height: min(90vh, 850px);
+  overflow-y: auto;
+}
+.pt-editor-subtitle {
+  margin: 5px 0 0;
+  color: #8798ae;
+  font-size: 11px;
+}
+.pt-no-attendance {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eef6ff;
+  color: #386da9;
+  font-size: 12px;
+}
+.pt-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+.pt-editor-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #536781;
+  font-size: 11px;
+  font-weight: 600;
+}
+.pt-editor-grid input,
+.pt-editor-grid textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d6e3ef;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfdff;
+  color: #26364e;
+  font: inherit;
+  font-size: 12px;
+}
+.pt-editor-grid input:focus,
+.pt-editor-grid textarea:focus {
+  outline: 2px solid rgba(66, 134, 243, 0.18);
+  border-color: #4286f3;
+}
+.pt-editor-grid input[readonly] {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.pt-editor-wide {
+  grid-column: 1 / -1;
+}
+.pt-editor-actions {
+  flex-wrap: wrap;
+}
+.pt-save-error {
+  margin: 0;
+  color: #c2410c;
+  font-size: 12px;
+}
+@media (max-width: 560px) {
+  .pt-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .pt-editor-wide {
+    grid-column: auto;
+  }
+  .pt-editor-actions > button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
