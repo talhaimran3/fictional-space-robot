@@ -47,9 +47,15 @@ export const useOrganizations = () => {
       }
     };
 
+    if (typeof window !== "undefined") {
+      window.addEventListener("plannr:organizations-updated", fetchOrganizations);
+    }
     fetchOrganizations();
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("plannr:organizations-updated", fetchOrganizations);
+      }
     };
   }, [token]);
 
