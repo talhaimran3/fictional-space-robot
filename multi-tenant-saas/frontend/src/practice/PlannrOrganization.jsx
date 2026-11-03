@@ -211,12 +211,12 @@ export default function PlannrOrganization() {
 
     const cleanName = name.trim();
     const cleanSlug = slug.trim().toLowerCase();
-    if (!cleanName || !cleanSlug) {
-      setFormError("Organization name and slug are required.");
+    if (cleanName.length < 2 || !cleanSlug) {
+      setFormError("Organization name must be at least 2 characters and slug is required.");
       return;
     }
     if (cleanSlug.length < 2 || !/^[a-z0-9-]+$/.test(cleanSlug)) {
-      setFormError("Use lowercase letters, numbers, and single hyphens in the slug.");
+      setFormError("Use at least 2 lowercase letters, numbers, or hyphens in the slug.");
       return;
     }
 
