@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Clock3, ChevronDown, CalendarDays, Filter, Flag, ChevronLeft,
   ChevronRight, X, CheckCircle2, AlertTriangle, Save,
@@ -29,10 +29,8 @@ export default function PlannrTimesheets() {
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [statusOverrides, setStatusOverrides] = useState({});
   const { token } = useAuth();
   const [activeTab, setActiveTab] = useState("Current Period");
-  const [searchQuery, setSearchQuery] = useState("");
   const [onlyExceptions, setOnlyExceptions] = useState(false);
   const [selectedTimecard, setSelectedTimecard] = useState(null);
   const [isApproveAllModalOpen, setIsApproveAllModalOpen] = useState(false);
@@ -42,7 +40,7 @@ export default function PlannrTimesheets() {
   const [laborCost, setLaborCost] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
 
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     if (!token) {
       setShifts([]);
       setLoading(false);
@@ -64,19 +62,13 @@ export default function PlannrTimesheets() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchAttendance();
-  }, [token]);
+  }, [fetchAttendance]);
 
-  const rows = useMemo(
-    () => buildTimecardRows(shifts).map((row) => {
-      const override = statusOverrides[row.id];
-      return override ? { ...row, status: override.status, statusTone: override.statusTone } : row;
-    }),
-    [shifts, statusOverrides],
-  );
+  const rows = useMemo(() => buildTimecardRows(shifts), [shifts]);
 
   useEffect(() => {
     if (!selectedTimecard) return;
@@ -91,15 +83,13 @@ export default function PlannrTimesheets() {
 
   const previewWorkedHours = calculateWorkedHours(clockIn, clockOut, breakMinutes);
   const filteredRows = useMemo(() => rows.filter((row) => {
-    const matchesSearch = row.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      row.team.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesExceptions = !onlyExceptions || row.status === "Flagged" || row.status === "Pending";
     let matchesTab = true;
     if (activeTab.includes("Pending")) matchesTab = row.status === "Pending";
     else if (activeTab === "Approved Logs") matchesTab = row.status === "Approved";
     else if (activeTab.includes("Overtime")) matchesTab = row.status === "Flagged" || row.variance.includes("+");
-    return matchesSearch && matchesExceptions && matchesTab;
-  }), [rows, searchQuery, onlyExceptions, activeTab]);
+    return matchesExceptions && matchesTab;
+  }), [rows, onlyExceptions, activeTab]);
 
   const pendingRows = rows.filter((row) => row.status === "Pending");
   const pendingCount = pendingRows.length;
