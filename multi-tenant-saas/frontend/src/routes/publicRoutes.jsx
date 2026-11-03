@@ -11,6 +11,7 @@ import PlannrShifts from "../practice/PlannrShifts";
 import PlannrPeoples from "../practice/PlannrPeople";
 import PlannrDashboard from "../practice/PlannrDashboard";
 import PlannrTimesheets from "../practice/Timesheets";
+import PlannrOrganization from "../practice/PlannrOrganization";
 import AdminLayout from "../practice/AdminLayout";
 
 export const PublicLayout = () => {
@@ -40,6 +41,7 @@ export const publicRoutes = (
       <Route path="admin2/shifts" element={<PlannrShifts />} />
       <Route path="admin2/people" element={<PlannrPeoples />} />
       <Route path="admin2/timesheets" element={<PlannrTimesheets />} />
+      <Route path="admin2/organizations" element={<PlannrOrganization />} />
     </Route>
   </>
 );
