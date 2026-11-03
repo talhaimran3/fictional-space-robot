@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { label: "Shifts", icon: CalendarDays, path: "/admin2/shifts" },
   { label: "Timesheets", icon: Clock3, path: "/admin2/timesheets" },
   { label: "People", icon: Users, path: "/admin2/people" },
-  { label: "Organizations", icon: Building2, path: "/admin/organizations" },
+  { label: "Organizations", icon: Building2, path: "/admin2/organizations" },
 ];
 
 export default function Sidebar({ isOpen, onClose, activeNav = "Shifts" }) {
