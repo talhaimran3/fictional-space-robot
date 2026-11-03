@@ -186,6 +186,9 @@ export const saveShiftAttendance = async (req, res) => {
     if (clock_out_at && Number.isNaN(new Date(clock_out_at).getTime())) {
       return res.status(400).json({ error: "Clock-out time is invalid." });
     }
+    if (clock_out_at && !clock_in_at) {
+      return res.status(400).json({ error: "Clock-in time is required when clock-out is provided." });
+    }
     if (clock_in_at && clock_out_at && new Date(clock_out_at) < new Date(clock_in_at)) {
       return res.status(400).json({ error: "Clock-out must be after clock-in." });
     }
