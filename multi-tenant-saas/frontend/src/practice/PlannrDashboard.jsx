@@ -10,9 +10,9 @@ import {
 import "./PlannrDashboard.css";
 import { KpiCard } from "./DashboardComponents/KpiCard";
 import { PendingApprovals } from "./DashboardComponents/PendingApprovals";
-import { Punctuality } from "./DashboardComponents/Punctuality";
+import { Attendance } from "./DashboardComponents/Attendance";
 import { useShifts } from "../hooks/useShifts";
-import { usePunctuality } from "../hooks/usePunctuality";
+import { useAttendance } from "../hooks/useAttendance";
 
 const INITIAL_APPROVALS = [
   {
@@ -47,7 +47,7 @@ export default function PlannrDashboard() {
   const [isQuickShiftOpen, setIsQuickShiftOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const { shifts, shiftsCounts } = useShifts();
-  const { summary } = usePunctuality();
+  const { summary } = useAttendance();
   const handleConfirmApproveAll = () => {
     setApprovals([]);
     setIsApproveModalOpen(false);
@@ -124,7 +124,7 @@ export default function PlannrDashboard() {
         </div>
 
         <div className="pd-dashboard-grid">
-          <Punctuality />
+          <Attendance />
           <PendingApprovals
             approvals={approvals}
             onApproveAll={() => setIsApproveModalOpen(true)}

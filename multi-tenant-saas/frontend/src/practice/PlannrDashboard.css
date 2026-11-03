@@ -368,13 +368,12 @@ button {
 }
 
 .pd-mini-trend {
-     /* position: absolute; */
-    /* right: 12px; */
-    /* bottom: 12px; */
-    width: 60px;
-    height: 24px;
-    margin-inline: auto;
-
+  /* position: absolute; */
+  /* right: 12px; */
+  /* bottom: 12px; */
+  width: 60px;
+  height: 24px;
+  margin-inline: auto;
 }
 .pd-mini-trend svg {
   width: 100%;
@@ -512,8 +511,8 @@ button {
   font-size: 10px;
 }
 
-/* Punctuality Card */
-.pd-punctuality {
+/* Attendance Card */
+.pd-attendance {
   padding: 18px;
 }
 .pd-donut-area {
@@ -850,15 +849,14 @@ button {
   }
 }
 
-
-/* Punctuality API states */
-.pd-punctuality-message,
-.pd-punctuality-footnote {
+/* Attendance API states */
+.pd-attendance-message,
+.pd-attendance-footnote {
   margin: 12px 0 0;
   color: #858a96;
   font-size: 11px;
   line-height: 1.5;
 }
-.pd-punctuality-message[role="alert"] {
+.pd-attendance-message[role="alert"] {
   color: #b45309;
 }

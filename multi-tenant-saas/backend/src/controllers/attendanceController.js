@@ -1,8 +1,8 @@
 import db from "../config/database.js";
 
 /**
- * GET /api/punctuality/today
- * Returns today's punctuality for the authenticated user's organization.
+ * GET /api/attendance/today
+ * Returns today's attendance for the authenticated user's organization.
  * An arrival is late only when clock_in_at is strictly later than shift start.
  */
 

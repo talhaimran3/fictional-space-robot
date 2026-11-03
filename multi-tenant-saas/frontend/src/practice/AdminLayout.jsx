@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./TopBar";
 import { useAuth } from "../context/authContext";
@@ -12,11 +12,21 @@ const PATH_TO_NAV = {
   "/admin2/people": "People",
   "/admin2/organizations": "Organizations",
 };
-
 const PRIMARY_ACTIONS = {
-  "/admin2": { label: "Quick Shift", action: () => alert("Quick Shift is not connected yet.") },
-  "/admin2/people": { label: "Add Member", action: () => alert("Member management is not connected yet.") },
-  "/admin2/timesheets": { label: "Approve All", action: () => alert("Timesheet approvals are not connected yet.") },
+  "/": { label: "Home", action: () => useNavigate("/") },
+
+  "/admin2": {
+    label: "Quick Shift",
+    action: () => alert("Quick Shift is not connected yet."),
+  },
+  "/admin2/people": {
+    label: "Add Member",
+    action: () => alert("Member management is not connected yet."),
+  },
+  "/admin2/timesheets": {
+    label: "Approve All",
+    action: () => alert("Timesheet approvals are not connected yet."),
+  },
 };
 
 export default function AdminLayout() {
@@ -47,9 +57,9 @@ export default function AdminLayout() {
               ? "Search organizations, slugs..."
               : location.pathname === "/admin2/people"
                 ? "Search staff, roles, departments..."
-              : location.pathname === "/admin2/timesheets"
-                ? "Search people, logs..."
-                : "Search shifts, staff, organizations..."
+                : location.pathname === "/admin2/timesheets"
+                  ? "Search people, logs..."
+                  : "Search shifts, staff, organizations..."
           }
         />
         <div className="pln-layout-content">

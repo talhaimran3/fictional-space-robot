@@ -15,7 +15,7 @@ const EMPTY_SUMMARY = {
   },
 };
 
-export function usePunctuality() {
+export function useAttendance() {
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,14 +23,14 @@ export function usePunctuality() {
   useEffect(() => {
     let active = true;
 
-    async function loadPunctuality() {
+    async function loadAttendance() {
       try {
         setLoading(true);
         setError(null);
 
         // Fetch overall attendance, not just today's attendance.
-        const response = await apiClient.get("/punctuality/all");
-        console.log("response usePunctuality : ", response);
+        const response = await apiClient.get("/attendance/all");
+        console.log("response useAttendance : ", response);
         if (!active) return;
 
         setSummary({
@@ -57,7 +57,7 @@ export function usePunctuality() {
       }
     }
 
-    loadPunctuality();
+    loadAttendance();
 
     return () => {
       active = false;
