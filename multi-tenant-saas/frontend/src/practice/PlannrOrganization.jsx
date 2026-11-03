@@ -121,7 +121,7 @@ export default function PlannrOrganization() {
   const [query, setQuery] = useState("");
   const [memberFilter, setMemberFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-  const [modalOrganization, setModalOrganization] = useState(null);
+  const [modalOrganization, setModalOrganization] = useState(undefined);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
