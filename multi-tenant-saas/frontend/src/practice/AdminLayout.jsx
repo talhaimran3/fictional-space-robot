@@ -10,6 +10,7 @@ const PATH_TO_NAV = {
   "/admin2/shifts": "Shifts",
   "/admin2/timesheets": "Timesheets",
   "/admin2/people": "People",
+  "/admin2/organizations": "Organizations",
 };
 
 const PRIMARY_ACTIONS = {
@@ -42,8 +43,10 @@ export default function AdminLayout() {
           onPrimaryAction={primary?.action}
           primaryActionLabel={primary?.label}
           searchPlaceholder={
-            location.pathname === "/admin2/people"
-              ? "Search staff, roles, departments..."
+            location.pathname === "/admin2/organizations"
+              ? "Search organizations, slugs..."
+              : location.pathname === "/admin2/people"
+                ? "Search staff, roles, departments..."
               : location.pathname === "/admin2/timesheets"
                 ? "Search people, logs..."
                 : "Search shifts, staff, organizations..."
