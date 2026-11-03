@@ -215,7 +215,7 @@ export default function PlannrOrganization() {
       setFormError("Organization name and slug are required.");
       return;
     }
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleanSlug)) {
+    if (cleanSlug.length < 2 || !/^[a-z0-9-]+$/.test(cleanSlug)) {
       setFormError("Use lowercase letters, numbers, and single hyphens in the slug.");
       return;
     }
@@ -253,6 +253,9 @@ export default function PlannrOrganization() {
           ...current,
         ]);
         setNotice(`${cleanName} was created successfully.`);
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("plannr:organizations-updated"));
       }
       setModalOrganization(undefined);
     } catch (error) {
@@ -506,6 +509,7 @@ export default function PlannrOrganization() {
                   onChange={(event) => handleNameChange(event.target.value)}
                   placeholder="e.g. Northstar Logistics"
                   maxLength={120}
+                  minLength={2}
                   autoFocus
                   required
                 />
@@ -522,8 +526,8 @@ export default function PlannrOrganization() {
                   }}
                   placeholder="e.g. northstar-logistics"
                   maxLength={80}
-                  pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                  title="Use lowercase letters, numbers, and single hyphens."
+                  pattern="[a-z0-9-]{2,}"
+                  title="Use lowercase letters, numbers, and hyphens."
                   required
                 />
                 <small>Used as a unique identifier. Use lowercase letters, numbers, and hyphens.</small>
