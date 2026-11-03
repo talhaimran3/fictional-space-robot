@@ -142,7 +142,7 @@ export default function PlannrTimesheets() {
     try {
       setSaving(true);
       setSaveError("");
-      const eligibleRows = pendingRows.filter((row) => row.employeeId || shifts.find((shift) => shift.id === row.shiftId)?.employee_id);
+      const eligibleRows = pendingRows.filter((row) => shifts.some((shift) => shift.id === row.shiftId && shift.employee_id));
       for (const row of eligibleRows) {
         const attendance = row.attendance || {};
         await apiClient.put(`/attendance/shift/${row.shiftId}`, {
