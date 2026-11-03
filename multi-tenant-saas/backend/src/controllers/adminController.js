@@ -6,14 +6,14 @@ const getOrganizationInput = (req, res) => {
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   const slug = typeof req.body?.slug === "string" ? req.body.slug.trim().toLowerCase() : "";
 
-  if (!name || !slug) {
-    res.status(400).json({ error: "Organization name and slug are required." });
+  if (name.length < 2 || !slug) {
+    res.status(400).json({ error: "Organization name must be at least 2 characters and slug is required." });
     return null;
   }
 
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+  if (slug.length < 2 || !/^[a-z0-9-]+$/.test(slug)) {
     res.status(400).json({
-      error: "Slug must contain lowercase letters, numbers, and single hyphens.",
+      error: "Slug must be at least 2 characters and contain only lowercase letters, numbers, or hyphens.",
     });
     return null;
   }
