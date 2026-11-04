@@ -4,23 +4,29 @@
 
 Run `backend/migrations/2026-11-04-role-based-workforce.sql` against the same Neon database used by the API. It adds the optional phone number and profile-image object key to `users`, plus indexes for staff schedules and attendance.
 
-## 2. Provision the private Neon Object Storage bucket
+## 2. Provision Neon Object Storage
 
-The `neon.ts` file declares a private `profile-images` bucket. From the `multi-tenant-saas` directory, link the existing Neon project with the Neon CLI if it is not already linked, then run:
+Neon Object Storage is S3-compatible. The `neon.ts` file declares a private `profile-images` bucket. First confirm that the existing Neon project is in a supported Object Storage region. The current documented regions are AWS US East (Ohio), US East (N. Virginia), Europe (Frankfurt), and Asia Pacific (Singapore).
+
+From the `multi-tenant-saas` directory, run:
 
 ```bash
+npm install
+npx neon@latest link
 npx neon@latest deploy
+npx neon@latest env pull --file .env.storage
 ```
 
-Use the S3-compatible credentials and endpoint shown by Neon for that project/branch. Add these values to the backend environment (do not commit them):
+The CLI links to the Neon project/branch, deploys the private bucket, and pulls the generated S3 credentials. Copy these four values from `.env.storage` into your existing `backend/.env` file (do not replace the existing database URL or JWT secret):
 
 - `AWS_ENDPOINT_URL_S3`
 - `AWS_REGION`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
-- `NEON_STORAGE_BUCKET=profile-images`
 
-Profile image uploads are limited to JPEG, PNG, and WebP, with a 5 MB maximum. The bucket must remain private.
+Also set `NEON_STORAGE_BUCKET=profile-images` in `backend/.env`. The temporary `.env.storage` file is ignored by Git. Do not commit any storage credentials.
+
+The API uploads JPEG, PNG, and WebP files up to 5 MB, stores each object's key in Postgres, and returns short-lived signed URLs because the bucket is private. Neon Object Storage is not available in every Neon region; if your project is outside the supported regions, profile-picture storage cannot be provisioned there yet.
 
 ## 3. Role and data scope
 
