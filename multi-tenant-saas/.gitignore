@@ -1,8 +1,10 @@
-# Local Neon context and credentials
-.neon
+# Local environment secrets
 .env
 .env.*
 !.env.example
 backend/.env
 backend/.env.*
 !backend/.env.example
+
+# Uploaded user profile pictures are runtime data, not source files
+/backend/uploads/

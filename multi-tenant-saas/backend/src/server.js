@@ -8,19 +8,15 @@ import adminRoutes from "./routes/adminRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import membersRoutes from "./routes/membersRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
-
-employeeRoutes;
 import developerDatabaseRoutes from "./routes/developerDatabaseRoutes.js";
 import cors from "cors";
 import db from "./config/database.js";
-import { authenticateToken } from "./middleware/auth.middleware.js";
-import { basicRLS } from "./middleware/rls.middleware.js";
+import { getLocalProfileImageDirectory } from "./utils/localProfileStorage.js";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
-// Support a comma-separated list of allowed frontend URLs via FRONTEND_URLS,
-// or a single FRONTEND_URL for simple setups. Defaults to local Vite port.
 const frontendUrls = (
   process.env.FRONTEND_URLS ||
   process.env.FRONTEND_URL ||
@@ -32,9 +28,17 @@ const frontendUrls = (
 app.use(
   cors({
     origin: (origin, cb) => {
-      // Allow non-browser requests (curl, server-to-server) when no origin is set
       if (!origin) return cb(null, true);
-      if (frontendUrls.includes(origin)) return cb(null, true);
+      let isCodespacesFrontend = false;
+      try {
+        const parsedOrigin = new URL(origin);
+        isCodespacesFrontend =
+          parsedOrigin.protocol === "https:" &&
+          /-5173\.app\.github\.dev$/i.test(parsedOrigin.hostname);
+      } catch {
+        isCodespacesFrontend = false;
+      }
+      if (frontendUrls.includes(origin) || isCodespacesFrontend) return cb(null, true);
       cb(new Error("CORS policy: origin not allowed"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -45,7 +49,17 @@ app.use(
 
 app.use(express.json());
 
-// Base Route
+app.use(
+  "/uploads/profile-images",
+  express.static(getLocalProfileImageDirectory(), {
+    fallthrough: true,
+    index: false,
+    dotfiles: "deny",
+    maxAge: "7d",
+    immutable: true,
+  }),
+);
+
 app.get("/", async (req, res) => {
   res.json({
     success: true,
@@ -53,18 +67,11 @@ app.get("/", async (req, res) => {
   });
 });
 
-// Health Route
-// import { Redis } from 'ioredis'; // or 'redis' depending on your package
-// import { db } from './db'; // Your existing database module
-
-// Initialize your redis client instance somewhere accessible
-// const redis = new Redis(process.env.REDIS_URL);
-
 app.get("/api/health-check", async (req, res) => {
   const healthCheck = {
     status: "healthy",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(), // Node.js process uptime in seconds
+    uptime: process.uptime(),
     services: {
       api: { status: "up" },
       postgres: { status: "down", latency_ms: null },
@@ -76,62 +83,38 @@ app.get("/api/health-check", async (req, res) => {
   };
 
   try {
-    // 1. Test PostgreSQL Connection & Calculate Latency
     const dbStartTime = performance.now();
     const dbResult = await db.query("SELECT NOW();");
     const dbEndTime = performance.now();
 
     healthCheck.services.postgres.status = "up";
-    healthCheck.services.postgres.latency_ms = Math.round(
-      dbEndTime - dbStartTime,
-    );
+    healthCheck.services.postgres.latency_ms = Math.round(dbEndTime - dbStartTime);
   } catch (dbError) {
     healthCheck.status = "unhealthy";
     healthCheck.services.postgres.status = "down";
     healthCheck.services.postgres.error = dbError.message;
   }
 
-  // try {
-  //   // 2. Test Redis Cluster/Server Connection using PING
-  //   const redisStatus = await redis.ping();
-  //   if (redisStatus === "PONG") {
-  //     healthCheck.services.redis.status = "up";
-  //   } else {
-  //     throw new Error("Redis did not return PONG");
-  //   }
-  // } catch (redisError) {
-  //   healthCheck.status = "unhealthy";
-  //   healthCheck.services.redis.status = "down";
-  //   healthCheck.services.redis.error = redisError.message;
-  // }
-
-  // 3. Return correct HTTP status codes depending on dependencies
   if (healthCheck.status === "unhealthy") {
-    // 503 Service Unavailable allows load balancers (AWS ELB/Nginx) to know the app is failing
     return res.status(503).json(healthCheck);
   }
 
   return res.status(200).json(healthCheck);
 });
 
-// Main ROUTES
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/members", membersRoutes);
-
 app.use("/api/shifts", shiftRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/developer", developerDatabaseRoutes);
-// Global 404 Fallback Handler
+
 app.use((req, res) => {
-  res
-    .status(404)
-    .json({ error: "The requested API route path does not exist." });
+  res.status(404).json({ error: "The requested API route path does not exist." });
 });
 
-// Start listening
 app.listen(PORT, () => {
   console.log(`🚀 Server actively listening at http://localhost:${PORT}`);
 });

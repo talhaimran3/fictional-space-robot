@@ -2,21 +2,21 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import db from "../config/database.js";
 import {
-  deleteNeonObject,
-  getNeonObjectUrl,
-  uploadNeonObject,
-} from "../utils/neonObjectStorage.js";
+  deleteLocalProfileImage,
+  getLocalProfileImageUrl,
+  saveLocalProfileImage,
+} from "../utils/localProfileStorage.js";
 
-const profileImageUrl = async (key) => {
+const profileImageUrl = async (key, req) => {
   if (!key) return null;
   try {
-    return await getNeonObjectUrl(key);
+    return await getLocalProfileImageUrl(key, req);
   } catch {
     return null;
   }
 };
 
-const safeEmployee = async (row) => ({
+const safeEmployee = async (row, req) => ({
   id: row.id,
   email: row.email,
   full_name: row.full_name,
@@ -25,7 +25,7 @@ const safeEmployee = async (row) => ({
   phone: row.phone || null,
   hourly_rate: row.hourly_rate ?? null,
   status: row.status,
-  profile_image_url: await profileImageUrl(row.profile_image_key),
+  profile_image_url: await profileImageUrl(row.profile_image_key, req),
   created_at: row.created_at,
   updated_at: row.updated_at,
 });
@@ -51,7 +51,7 @@ export const getAllEmployees = async (req, res) => {
       ORDER BY u.created_at DESC;
     `;
     const { rows } = await db.query(queryText, [isDeveloper, organizationId]);
-    return res.status(200).json({ success: true, employees: await Promise.all(rows.map(safeEmployee)) });
+    return res.status(200).json({ success: true, employees: await Promise.all(rows.map((row) => safeEmployee(row, req))) });
   } catch (error) {
     console.error("Error fetching users:", error);
     return res.status(500).json({
@@ -72,7 +72,7 @@ export const getMyProfile = async (req, res) => {
     if (!result.rows.length) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
-    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0], req) });
   } catch (error) {
     console.error("Failed to load profile:", error);
     return res.status(500).json({ success: false, message: "Unable to load your profile." });
@@ -115,7 +115,7 @@ export const updateMyProfile = async (req, res) => {
     if (!result.rows.length) {
       return res.status(404).json({ error: "User not found." });
     }
-    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0], req) });
   } catch (error) {
     console.error("Failed to update profile:", error);
     if (error.code === "23505") {
@@ -142,6 +142,7 @@ export const uploadProfilePicture = async (req, res) => {
     return res.status(413).json({ error: "Profile pictures must be 5 MB or smaller." });
   }
 
+  let savedKey = null;
   try {
     const current = await db.query(
       "SELECT profile_image_key FROM users WHERE id = $1",
@@ -152,8 +153,8 @@ export const uploadProfilePicture = async (req, res) => {
     }
 
     const oldKey = current.rows[0].profile_image_key;
-    const key = "avatars/" + req.user.id + "/" + crypto.randomUUID() + "." + extension;
-    await uploadNeonObject(key, body, contentType);
+    const key = crypto.randomUUID() + "." + extension;
+    savedKey = await saveLocalProfileImage(key, body);
 
     const result = await db.query(
       `UPDATE users
@@ -161,25 +162,33 @@ export const uploadProfilePicture = async (req, res) => {
        WHERE id = $2
        RETURNING id, email, full_name, role, organization_id, phone,
                  profile_image_key, status, created_at, updated_at`,
-      [key, req.user.id],
+      [savedKey, req.user.id],
     );
+
+    if (!result.rows.length) {
+      await deleteLocalProfileImage(savedKey);
+      return res.status(404).json({ error: "User not found." });
+    }
 
     if (oldKey) {
       try {
-        await deleteNeonObject(oldKey);
+        await deleteLocalProfileImage(oldKey);
       } catch (deleteError) {
         console.warn("Old profile picture could not be removed:", deleteError.message);
       }
     }
 
-    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0], req) });
   } catch (error) {
+    if (savedKey) {
+      try {
+        await deleteLocalProfileImage(savedKey);
+      } catch (cleanupError) {
+        console.warn("New profile picture cleanup failed:", cleanupError.message);
+      }
+    }
     console.error("Profile picture upload failed:", error);
-    return res.status(500).json({
-      error: error.message?.includes("Neon Object Storage")
-        ? error.message
-        : "Unable to upload your profile picture.",
-    });
+    return res.status(500).json({ error: "Unable to upload your profile picture." });
   }
 };
 
