@@ -197,6 +197,17 @@ export default function PlannrShifts() {
 
   return (
     <section className="pln-shifts">
+              <div className="pln-shifts__heading-meta">
+
+         <span
+            className={`pln-shifts__access ${isDeveloper ? "is-developer" : ""}`}
+          >
+            {isDeveloper ? "Developer access" : "Read-only"}
+          </span>
+          <span className="pln-shifts__count">
+            {shifts.length} {shifts.length === 1 ? "shift" : "shifts"}
+          </span>        </div>
+
       <header className="pln-shifts__heading">
         <div>
           <p className="pln-shifts__eyebrow">Schedule management</p>
@@ -207,16 +218,7 @@ export default function PlannrShifts() {
               : "Choose an organization to view its schedule."}
           </p>
         </div>
-        <div className="pln-shifts__heading-meta">
-          <span
-            className={`pln-shifts__access ${isDeveloper ? "is-developer" : ""}`}
-          >
-            {isDeveloper ? "Developer access" : "Read-only"}
-          </span>
-          <span className="pln-shifts__count">
-            {shifts.length} {shifts.length === 1 ? "shift" : "shifts"}
-          </span>
-        </div>
+       
       </header>
 
       <div className="pln-shifts__toolbar">

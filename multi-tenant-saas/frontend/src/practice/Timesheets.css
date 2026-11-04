@@ -637,6 +637,9 @@ button {
   background: transparent;
   color: #7f91a7;
 }
+.pt-more:hover {
+  background: rgba(224, 237, 250, 0.7);
+}
 
 .pt-empty-state {
   min-height: 160px;
@@ -716,6 +719,9 @@ button {
   background: transparent;
   border: 0;
   color: var(--pt-muted);
+}
+.pt-close-btn:hover {
+  background: rgba(224, 237, 250, 0.7);
 }
 
 .pt-modal-body {
@@ -855,7 +861,6 @@ button {
     justify-content: center;
   }
 }
-
 
 /* Attendance editor */
 .pt-editor-modal {

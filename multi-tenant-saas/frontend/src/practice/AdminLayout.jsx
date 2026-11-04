@@ -12,32 +12,13 @@ const PATH_TO_NAV = {
   "/admin2/people": "People",
   "/admin2/organizations": "Organizations",
 };
-const PRIMARY_ACTIONS = {
-  "/": { label: "Home", action: () => useNavigate("/") },
-
-  "/admin2": {
-    label: "Quick Shift",
-    action: () => alert("Quick Shift is not connected yet."),
-  },
-  "/admin2/people": {
-    label: "Add Member",
-    action: () => alert("Member management is not connected yet."),
-  },
-  "/admin2/timesheets": {
-    label: "Approve All",
-    action: () => alert("Timesheet approvals are not connected yet."),
-  },
-};
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
 
   const activeNav = PATH_TO_NAV[location.pathname] || "Dashboard";
-  const isDeveloper = user?.role === "developer";
   // Shift creation has a real page-local handler, so don't render a fake topbar action here.
-  const primary = isDeveloper ? PRIMARY_ACTIONS[location.pathname] : null;
 
   return (
     <div className="pln-layout">
@@ -50,8 +31,6 @@ export default function AdminLayout() {
       <main className="pln-layout-main">
         <Topbar
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
-          onPrimaryAction={primary?.action}
-          primaryActionLabel={primary?.label}
           searchPlaceholder={
             location.pathname === "/admin2/organizations"
               ? "Search organizations, slugs..."

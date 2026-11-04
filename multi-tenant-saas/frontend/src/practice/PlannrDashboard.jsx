@@ -1,57 +1,16 @@
 import React, { useState } from "react";
-import {
-  Clock3,
-  TrendingUp,
-  DollarSign,
-  TriangleAlert,
-  CheckCircle2,
-  X,
-} from "lucide-react";
+import { Clock3, TrendingUp, DollarSign, TriangleAlert, X } from "lucide-react";
 import "./PlannrDashboard.css";
 import { KpiCard } from "./DashboardComponents/KpiCard";
-import { PendingApprovals } from "./DashboardComponents/PendingApprovals";
 import { Attendance } from "./DashboardComponents/Attendance";
 import { useShifts } from "../hooks/useShifts";
 import { useAttendance } from "../hooks/useAttendance";
 
-const INITIAL_APPROVALS = [
-  {
-    id: 1,
-    initials: "SL",
-    name: "Steven Lane",
-    request: "Sick Leave Request",
-    tag: "Sick Leave",
-    tone: "peach",
-  },
-  {
-    id: 2,
-    initials: "RE",
-    name: "Ralph Edwards",
-    request: "Timesheet Variance +2.0h OT",
-    tag: "Overtime",
-    tone: "rose",
-  },
-  {
-    id: 3,
-    initials: "JH",
-    name: "Jerry Helfer",
-    request: "Casual Leave Request",
-    tag: "Casual Leave",
-    tone: "cyan",
-  },
-];
-
 export default function PlannrDashboard() {
-  const [activeSubTab, setActiveSubTab] = useState("Overview");
-  const [approvals, setApprovals] = useState(INITIAL_APPROVALS);
   const [isQuickShiftOpen, setIsQuickShiftOpen] = useState(false);
-  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const { shifts, shiftsCounts } = useShifts();
   const { summary } = useAttendance();
-  const handleConfirmApproveAll = () => {
-    setApprovals([]);
-    setIsApproveModalOpen(false);
-  };
+
   const today = new Date();
 
   const activeToday = shifts.filter((shift) => {
@@ -125,10 +84,6 @@ export default function PlannrDashboard() {
 
         <div className="pd-dashboard-grid">
           <Attendance />
-          <PendingApprovals
-            approvals={approvals}
-            onApproveAll={() => setIsApproveModalOpen(true)}
-          />
         </div>
       </div>
 
@@ -185,49 +140,6 @@ export default function PlannrDashboard() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Approve All Modal */}
-      {isApproveModalOpen && (
-        <div
-          className="pd-modal-backdrop"
-          onClick={() => setIsApproveModalOpen(false)}
-        >
-          <div className="pd-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="pd-modal-header">
-              <h2>Approve Pending Requests</h2>
-              <button
-                className="pd-close-btn"
-                onClick={() => setIsApproveModalOpen(false)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div className="pd-modal-body">
-              <p style={{ margin: 0, color: "#6e7380", fontSize: "13px" }}>
-                Are you sure you want to approve all{" "}
-                <strong>{approvals.length} pending request(s)</strong> for
-                Dublin Office?
-              </p>
-              <div className="pd-modal-actions">
-                <button
-                  type="button"
-                  className="pd-secondary-btn"
-                  onClick={() => setIsApproveModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="pd-primary-btn"
-                  onClick={handleConfirmApproveAll}
-                >
-                  <CheckCircle2 size={16} /> Confirm Approve
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -90,7 +90,9 @@ function OrganizationRow({ organization, onEdit, canEdit }) {
         </span>
         <small>{shiftTotal === 1 ? "shift" : "shifts"}</small>
       </div>
-      <div className="pln-orgs__date-cell">{formatDate(organization.created_at)}</div>
+      <div className="pln-orgs__date-cell">
+        {formatDate(organization.created_at)}
+      </div>
       <div className="pln-orgs__actions-cell">
         {canEdit ? (
           <button
@@ -132,7 +134,20 @@ export default function PlannrOrganization() {
   const isDeveloper = user?.role === "developer";
 
   useEffect(() => {
-    setOrganizations(fetchedOrganizations);
+    const nextOrganizations = Array.isArray(fetchedOrganizations)
+      ? fetchedOrganizations
+      : [];
+    setOrganizations((currentOrganizations) => {
+      // The hook may provide a new array reference on every render. Avoid
+      // scheduling another render unless the organization data actually changed.
+      if (
+        JSON.stringify(currentOrganizations) ===
+        JSON.stringify(nextOrganizations)
+      ) {
+        return currentOrganizations;
+      }
+      return nextOrganizations;
+    });
   }, [fetchedOrganizations]);
 
   const filteredOrganizations = useMemo(() => {
@@ -212,11 +227,15 @@ export default function PlannrOrganization() {
     const cleanName = name.trim();
     const cleanSlug = slug.trim().toLowerCase();
     if (cleanName.length < 2 || !cleanSlug) {
-      setFormError("Organization name must be at least 2 characters and slug is required.");
+      setFormError(
+        "Organization name must be at least 2 characters and slug is required.",
+      );
       return;
     }
     if (cleanSlug.length < 2 || !/^[a-z0-9-]+$/.test(cleanSlug)) {
-      setFormError("Use at least 2 lowercase letters, numbers, or hyphens in the slug.");
+      setFormError(
+        "Use at least 2 lowercase letters, numbers, or hyphens in the slug.",
+      );
       return;
     }
 
@@ -283,7 +302,9 @@ export default function PlannrOrganization() {
           </p>
         </div>
         <div className="pln-orgs__heading-meta">
-          <span className={`pln-orgs__access ${isDeveloper ? "is-developer" : ""}`}>
+          <span
+            className={`pln-orgs__access ${isDeveloper ? "is-developer" : ""}`}
+          >
             {isDeveloper ? "Developer access" : "Organization access"}
           </span>
           {isDeveloper && (
@@ -304,7 +325,9 @@ export default function PlannrOrganization() {
           icon={Building2}
           label="Organizations"
           value={organizations.length}
-          detail={isDeveloper ? "Across the workspace" : "Available to your account"}
+          detail={
+            isDeveloper ? "Across the workspace" : "Available to your account"
+          }
           tone="blue"
         />
         <MetricCard
@@ -326,7 +349,9 @@ export default function PlannrOrganization() {
       <div className="pln-orgs__panel">
         <div className="pln-orgs__panel-heading">
           <div>
-            <h2>{isDeveloper ? "Organization directory" : "Your organization"}</h2>
+            <h2>
+              {isDeveloper ? "Organization directory" : "Your organization"}
+            </h2>
             <p>
               {isDeveloper
                 ? "Search, filter, and update organization details."
@@ -396,7 +421,11 @@ export default function PlannrOrganization() {
           <div className="pln-orgs__notice" role="status">
             <CheckCircle2 size={16} />
             <span>{notice}</span>
-            <button type="button" onClick={() => setNotice("")} aria-label="Dismiss message">
+            <button
+              type="button"
+              onClick={() => setNotice("")}
+              aria-label="Dismiss message"
+            >
               <X size={14} />
             </button>
           </div>
@@ -432,7 +461,9 @@ export default function PlannrOrganization() {
             <div className="pln-orgs__empty">
               <Building2 size={25} />
               <strong>
-                {organizations.length ? "No matching organizations" : "No organizations yet"}
+                {organizations.length
+                  ? "No matching organizations"
+                  : "No organizations yet"}
               </strong>
               <span>
                 {organizations.length
@@ -461,7 +492,9 @@ export default function PlannrOrganization() {
           </div>
           <span>
             Showing {filteredOrganizations.length}{" "}
-            {filteredOrganizations.length === 1 ? "organization" : "organizations"}
+            {filteredOrganizations.length === 1
+              ? "organization"
+              : "organizations"}
           </span>
         </footer>
       </div>
@@ -481,7 +514,9 @@ export default function PlannrOrganization() {
               </div>
               <div>
                 <h2 id="pln-orgs-modal-title">
-                  {modalOrganization ? "Edit organization" : "Create organization"}
+                  {modalOrganization
+                    ? "Edit organization"
+                    : "Create organization"}
                 </h2>
                 <p>
                   {modalOrganization
@@ -522,7 +557,9 @@ export default function PlannrOrganization() {
                   value={slug}
                   onChange={(event) => {
                     setSlugEdited(true);
-                    setSlug(event.target.value.toLowerCase().replace(/\s+/g, "-"));
+                    setSlug(
+                      event.target.value.toLowerCase().replace(/\s+/g, "-"),
+                    );
                   }}
                   placeholder="e.g. northstar-logistics"
                   maxLength={80}
@@ -530,7 +567,10 @@ export default function PlannrOrganization() {
                   title="Use lowercase letters, numbers, and hyphens."
                   required
                 />
-                <small>Used as a unique identifier. Use lowercase letters, numbers, and hyphens.</small>
+                <small>
+                  Used as a unique identifier. Use lowercase letters, numbers,
+                  and hyphens.
+                </small>
               </label>
 
               {formError && (
@@ -559,7 +599,9 @@ export default function PlannrOrganization() {
                   ) : (
                     <>
                       <CheckCircle2 size={16} />
-                      {modalOrganization ? "Save changes" : "Create organization"}
+                      {modalOrganization
+                        ? "Save changes"
+                        : "Create organization"}
                     </>
                   )}
                 </button>

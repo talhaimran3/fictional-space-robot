@@ -22,8 +22,7 @@ const roleLabel = (role) =>
 
 export default function Topbar({
   onOpenMobileMenu,
-  onPrimaryAction,
-  primaryActionLabel = "Add Member",
+
   searchPlaceholder = "Search anything...",
 }) {
   const { user } = useAuth();
@@ -54,16 +53,7 @@ const navigate = useNavigate();
       </div>
 
       <div className="pl-header-actions">
-        {onPrimaryAction && (
-          <button
-            className="pl-primary-button"
-            type="button"
-            onClick={onPrimaryAction}
-          >
-            <Plus size={18} />
-            <span>{primaryActionLabel}</span>
-          </button>
-        )}
+      
 
         <button
           className="pl-notification-button"

@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen, onClose, activeNav = "Shifts" }) {
           </button>
         </div>
 
-        <div className="pl-org-switcher-wrap">
+        {/* <div className="pl-org-switcher-wrap">
           <button
             className="pl-org-switcher"
             type="button"
@@ -113,7 +113,7 @@ export default function Sidebar({ isOpen, onClose, activeNav = "Shifts" }) {
               )}
             </div>
           )}
-        </div>
+        </div> */}
 
         <nav className="pl-main-nav">
           <div className="pl-nav-label">WORKSPACE</div>
