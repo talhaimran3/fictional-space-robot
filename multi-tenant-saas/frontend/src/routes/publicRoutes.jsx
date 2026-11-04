@@ -9,39 +9,31 @@ import PublicNavbar from "../components/PublicNavbar";
 import Footer from "../components/Footer";
 import PlannrShifts from "../practice/PlannrShifts";
 import PlannrPeoples from "../practice/PlannrPeople";
-import PlannrDashboard from "../practice/PlannrDashboard";
-import PlannrTimesheets from "../practice/Timesheets";
+import WorkspaceHome from "../practice/WorkspaceHome";
+import TimesheetsHome from "../practice/TimesheetsHome";
 import PlannrOrganization from "../practice/PlannrOrganization";
+import MyProfile from "../practice/MyProfile";
 import AdminLayout from "../practice/AdminLayout";
 
-export const PublicLayout = () => {
-  return (
-    <>
-      <PublicNavbar />
-      <Outlet />
-      <Footer />
-    </>
-  );
-};
+export const PublicLayout = () => <><PublicNavbar/><Outlet/><Footer/></>;
 
 export const publicRoutes = (
   <>
-    {/* Marketing + auth */}
-    <Route element={<PublicLayout />}>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/features" element={<FeaturesPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <Route element={<PublicLayout/>}>
+      <Route path="/" element={<LandingPage/>}/>
+      <Route path="/pricing" element={<PricingPage/>}/>
+      <Route path="/features" element={<FeaturesPage/>}/>
+      <Route path="/login" element={<Login/>}/>
+      <Route path="/register" element={<Register/>}/>
     </Route>
-
-    {/* Plannr practice app shell — no PublicNavbar/Footer */}
-    <Route element={<AdminLayout />}>
-      <Route path="admin2" element={<PlannrDashboard />} />
-      <Route path="admin2/shifts" element={<PlannrShifts />} />
-      <Route path="admin2/people" element={<PlannrPeoples />} />
-      <Route path="admin2/timesheets" element={<PlannrTimesheets />} />
-      <Route path="admin2/organizations" element={<PlannrOrganization />} />
+    <Route element={<AdminLayout/>}>
+      <Route path="admin2" element={<WorkspaceHome/>}/>
+      <Route path="admin2/dashboard" element={<WorkspaceHome/>}/>
+      <Route path="admin2/shifts" element={<PlannrShifts/>}/>
+      <Route path="admin2/people" element={<PlannrPeoples/>}/>
+      <Route path="admin2/timesheets" element={<TimesheetsHome/>}/>
+      <Route path="admin2/profile" element={<MyProfile/>}/>
+      <Route path="admin2/organizations" element={<PlannrOrganization/>}/>
     </Route>
   </>
 );

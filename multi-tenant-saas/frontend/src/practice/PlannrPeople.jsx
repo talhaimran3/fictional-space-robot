@@ -1,572 +1,115 @@
-import React, { useMemo, useState } from "react";
-import {
-  ArrowDown,
-  CalendarDays,
-  ChevronDown,
-  Download,
-  Search,
-  ShieldCheck,
-  Users,
-  UserCheck,
-  Coffee,
-  X,
-  CheckCircle2,
-} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Plus, Search, ShieldCheck, Trash2, Pencil, RefreshCw, X } from "lucide-react";
+import { useAuth } from "../context/authContext";
+import { useOrganizations } from "../hooks/useOrganizations";
+import apiClient from "../api/client";
 import "./PlannrPeople.css";
 
-const INITIAL_PEOPLE = [
-  {
-    id: 1,
-    name: "Sophia Martinez",
-    email: "sophia.m@acme.com",
-    role: "UX Designer",
-    department: "Design",
-    status: "Active",
-    shifts: "5 shifts / 40 hrs",
-    tone: "purple",
-    initials: "SM",
-  },
-  {
-    id: 2,
-    name: "James Patel",
-    email: "james.p@acme.com",
-    role: "Team Lead",
-    department: "Engineering",
-    status: "Active",
-    shifts: "4 shifts / 32 hrs",
-    tone: "blue",
-    initials: "JP",
-  },
-  {
-    id: 3,
-    name: "Bessie Cooper",
-    email: "bessie.c@acme.com",
-    role: "Accountant",
-    department: "Finance",
-    status: "On Leave",
-    shifts: "0 shifts / 0 hrs",
-    tone: "peach",
-    initials: "BC",
-  },
-  {
-    id: 4,
-    name: "Priya Johnson",
-    email: "priya.j@acme.com",
-    role: "HR Specialist",
-    department: "People Ops",
-    status: "Part-Time",
-    shifts: "3 shifts / 24 hrs",
-    tone: "teal",
-    initials: "PJ",
-  },
-];
+const roles = ["staff", "manager", "admin"];
 
-function Avatar({ initials, tone = "blue", size = "large" }) {
-  return (
-    <div className={`pp-avatar pp-avatar--${tone} pp-avatar--${size}`}>
-      {initials}
-    </div>
-  );
-}
-
-function MetricCard({ icon: Icon, title, value, context, tone }) {
-  return (
-    <div className="pp-metric-card">
-      <div className={`pp-metric-icon pp-metric-icon--${tone}`}>
-        <Icon size={21} strokeWidth={1.8} />
-      </div>
-      <div className="pp-metric-copy">
-        <span>{title}</span>
-        <div>
-          <strong>{value}</strong>
-          <small>{context}</small>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatusBadge({ status }) {
-  const type =
-    status === "On Leave"
-      ? "leave"
-      : status === "Part-Time"
-        ? "part-time"
-        : "active";
-
-  return (
-    <span className={`pp-status pp-status--${type}`}>
-      <i />
-      {status}
-    </span>
-  );
-}
-
-function StaffRow({ person, selected, onSelect, onEdit }) {
-  return (
-    <div className="pp-staff-row">
-      <input
-        className="pp-checkbox"
-        type="checkbox"
-        checked={selected}
-        onChange={() => onSelect(person.id)}
-        aria-label={`Select ${person.name}`}
-      />
-
-      <div className="pp-employee-cell">
-        <Avatar initials={person.initials} tone={person.tone} />
-        <div className="pp-employee-copy">
-          <strong>{person.name}</strong>
-          <span>{person.email}</span>
-        </div>
-      </div>
-
-      <div className="pp-fixed-cell pp-role-cell">
-        <span className="pp-tag">{person.role}</span>
-      </div>
-
-      <div className="pp-fixed-cell pp-department-cell">
-        <span className="pp-tag">{person.department}</span>
-      </div>
-
-      <div className="pp-fixed-cell pp-status-cell">
-        <StatusBadge status={person.status} />
-      </div>
-
-      <div className="pp-fixed-cell pp-week-cell">
-        <CalendarDays size={14} />
-        <span>{person.shifts}</span>
-      </div>
-
-      <div className="pp-action-cell">
-        <button className="pp-edit-button" type="button" onClick={() => onEdit(person)}>
-          Edit
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function PeopleDirectory({ people, onEditPerson }) {
-  const [activeTab, setActiveTab] = useState("All Staff");
+export default function PlannrPeoples() {
+  const { user, token } = useAuth();
+  const { organizations } = useOrganizations();
+  const isDeveloper = user?.role === "developer";
+  const canManage = ["developer", "admin", "manager"].includes(user?.role);
+  const [people, setPeople] = useState([]);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [modal, setModal] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "", role: "staff", password: "", hourly_rate: "25", organization_id: user?.organization_id || user?.organizationId || "" });
 
-  const [selectedDept, setSelectedDept] = useState("All departments");
-  const [selectedRole, setSelectedRole] = useState("All roles");
-  const [selectedStatus, setSelectedStatus] = useState("All statuses");
-  const [activeMenu, setActiveMenu] = useState(null);
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const response = await apiClient.get("/employees/all", { headers: { Authorization: `Bearer ${token}` } });
+      setPeople(response.data?.employees || []);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.response?.data?.error || "Unable to load staff.");
+    } finally { setLoading(false); }
+  }, [token]);
 
-  const departments = ["All departments", "Design", "Engineering", "Finance", "People Ops"];
-  const roles = ["All roles", "UX Designer", "Team Lead", "Accountant", "HR Specialist"];
-  const statuses = ["All statuses", "Active", "On Leave", "Part-Time"];
+  useEffect(() => { load(); }, [load]);
 
-  const filteredPeople = useMemo(() => {
-    return people.filter((person) => {
-      const matchesQuery =
-        person.name.toLowerCase().includes(query.toLowerCase()) ||
-        person.email.toLowerCase().includes(query.toLowerCase());
-
-      const matchesDept = selectedDept === "All departments" || person.department === selectedDept;
-      const matchesRole = selectedRole === "All roles" || person.role === selectedRole;
-      const matchesStatus = selectedStatus === "All statuses" || person.status === selectedStatus;
-
-      const matchesTab =
-        activeTab === "All Staff" ||
-        (activeTab === "Active" && person.status === "Active") ||
-        (activeTab === "On Leave" && person.status === "On Leave");
-
-      return matchesQuery && matchesDept && matchesRole && matchesStatus && matchesTab;
-    });
-  }, [people, activeTab, query, selectedDept, selectedRole, selectedStatus]);
-
-  const toggleSelected = (id) => {
-    setSelected((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
-    );
+  const openCreate = () => {
+    setForm({ full_name: "", email: "", phone: "", role: "staff", password: "", hourly_rate: "25", organization_id: user?.organization_id || user?.organizationId || organizations[0]?.id || "" });
+    setModal({ mode: "create" });
+  };
+  const openEdit = (person) => {
+    setForm({ full_name: person.full_name || "", email: person.email || "", phone: person.phone || "", role: person.role || "staff", password: "", hourly_rate: String(person.hourly_rate ?? "25"), organization_id: person.organization_id || "" });
+    setModal({ mode: "edit", person });
+  };
+  const save = async (event) => {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      if (modal.mode === "create") {
+        await apiClient.post("/employees/create", {
+          organization_id: form.organization_id, name: form.full_name, email: form.email,
+          phone: form.phone || null, role: form.role, password: form.password,
+          hourly_rate: form.hourly_rate === "" ? null : Number(form.hourly_rate),
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await apiClient.put(`/employees/update/${encodeURIComponent(modal.person.id)}`, {
+          full_name: form.full_name, email: form.email, phone: form.phone,
+          role: form.role, hourly_rate: form.hourly_rate === "" ? null : Number(form.hourly_rate),
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      setModal(null); await load();
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.response?.data?.error || "Unable to save this staff member.");
+    } finally { setSaving(false); }
+  };
+  const remove = async (person) => {
+    if (!window.confirm(`Delete ${person.full_name || person.email}? This may be blocked when the account has historical records.`)) return;
+    try {
+      await apiClient.delete(`/employees/delete/${encodeURIComponent(person.id)}`, { headers: { Authorization: `Bearer ${token}` } });
+      await load();
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.response?.data?.error || "Unable to delete this staff member.");
+    }
   };
 
-  const selectAll = (event) => {
-    setSelected(event.target.checked ? filteredPeople.map((person) => person.id) : []);
-  };
+  const filtered = people.filter((person) => [person.full_name, person.email, person.role].some((value) => String(value || "").toLowerCase().includes(query.toLowerCase())));
 
   return (
     <section className="pp-directory">
+      <header className="pp-page-heading">
+        <div><p className="pp-eyebrow">Workforce</p><h1>People</h1><p>Manage your organization's staff accounts, details and access levels.</p></div>
+        {canManage && <button type="button" className="pp-primary-button" onClick={openCreate}><Plus size={16}/> Add staff</button>}
+      </header>
       <div className="pp-directory-panel">
-        <div className="pp-directory-nav">
-          <div className="pp-tabs">
-            {[
-              ["All Staff", people.length],
-              ["Active", people.filter((p) => p.status === "Active").length],
-              ["On Leave", people.filter((p) => p.status === "On Leave").length],
-              ["Departments", ""],
-              ["Roles & Rates", ""],
-            ].map(([label, count]) => (
-              <button
-                key={label}
-                className={`pp-tab ${activeTab === label ? "is-active" : ""}`}
-                type="button"
-                onClick={() => setActiveTab(label)}
-              >
-                {label} {count !== "" && `(${count})`}
-              </button>
-            ))}
-          </div>
-
-          <button
-            className="pp-outline-button"
-            type="button"
-            onClick={() => window.alert("Exporting staff directory CSV...")}
-          >
-            <Download size={16} />
-            <span>Export</span>
-          </button>
-        </div>
-
-        {/* Filters Toolbar */}
         <div className="pp-filters">
-          <label className="pp-staff-search">
-            <Search size={18} />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by name or email..."
-            />
-          </label>
-
-          <div className="pp-filter-dropdown-wrap">
-            <button
-              className="pp-filter"
-              type="button"
-              onClick={() => setActiveMenu(activeMenu === "dept" ? null : "dept")}
-            >
-              <div>
-                <span>Department</span>
-                <strong>{selectedDept}</strong>
-              </div>
-              <ChevronDown size={14} />
-            </button>
-            {activeMenu === "dept" && (
-              <div className="pp-popover-menu">
-                {departments.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={selectedDept === d ? "is-selected" : ""}
-                    onClick={() => {
-                      setSelectedDept(d);
-                      setActiveMenu(null);
-                    }}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="pp-filter-dropdown-wrap">
-            <button
-              className="pp-filter"
-              type="button"
-              onClick={() => setActiveMenu(activeMenu === "role" ? null : "role")}
-            >
-              <div>
-                <span>Role</span>
-                <strong>{selectedRole}</strong>
-              </div>
-              <ChevronDown size={14} />
-            </button>
-            {activeMenu === "role" && (
-              <div className="pp-popover-menu">
-                {roles.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    className={selectedRole === r ? "is-selected" : ""}
-                    onClick={() => {
-                      setSelectedRole(r);
-                      setActiveMenu(null);
-                    }}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="pp-filter-dropdown-wrap">
-            <button
-              className="pp-filter"
-              type="button"
-              onClick={() => setActiveMenu(activeMenu === "status" ? null : "status")}
-            >
-              <div>
-                <span>Status</span>
-                <strong>{selectedStatus}</strong>
-              </div>
-              <ChevronDown size={14} />
-            </button>
-            {activeMenu === "status" && (
-              <div className="pp-popover-menu">
-                {statuses.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={selectedStatus === s ? "is-selected" : ""}
-                    onClick={() => {
-                      setSelectedStatus(s);
-                      setActiveMenu(null);
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <label className="pp-staff-search"><Search size={18}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, email or access level…"/></label>
+          <button className="pp-outline-button" type="button" onClick={load} disabled={loading}><RefreshCw size={15}/> Refresh</button>
         </div>
-
-        {/* Scrollable Table View */}
-        <div className="pp-table-scroll-wrapper">
-          <div className="pp-table-head">
-            <input
-              className="pp-checkbox"
-              type="checkbox"
-              checked={
-                filteredPeople.length > 0 &&
-                filteredPeople.every((person) => selected.includes(person.id))
-              }
-              onChange={selectAll}
-              aria-label="Select all staff"
-            />
-            <button className="pp-member-heading" type="button">
-              STAFF MEMBER
-              <ArrowDown size={12} />
-            </button>
-            <span className="pp-fixed-cell pp-role-cell">ROLE</span>
-            <span className="pp-fixed-cell pp-department-cell">DEPARTMENT</span>
-            <span className="pp-fixed-cell pp-status-cell">STATUS</span>
-            <span className="pp-fixed-cell pp-week-cell">THIS WEEK</span>
-            <span className="pp-action-cell" />
-          </div>
-
-          <div className="pp-staff-list">
-            {filteredPeople.map((person) => (
-              <StaffRow
-                key={person.id}
-                person={person}
-                selected={selected.includes(person.id)}
-                onSelect={toggleSelected}
-                onEdit={onEditPerson}
-              />
-            ))}
-            {!filteredPeople.length && (
-              <div className="pp-empty-state">
-                <Users size={22} />
-                <strong>No staff found</strong>
-                <span>Try changing your search or filters.</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="pp-directory-footer">
-          <div>
-            <span>Showing {filteredPeople.length} staff members</span>
-            <span>•</span>
-            <span>{selected.length} selected</span>
-          </div>
-          <div className="pp-pagination">
-            <button type="button" aria-label="Previous page">
-              ‹
-            </button>
-            <button className="is-current" type="button">
-              1
-            </button>
-            <button type="button">2</button>
-            <button type="button" aria-label="Next page">
-              ›
-            </button>
-          </div>
+        {error && <div className="pp-error" role="alert">{error}</div>}
+        <div className="pp-staff-list">
+          {loading ? <div className="pp-empty-state">Loading staff…</div> : filtered.map((person) => (
+            <article className="pp-live-staff-row" key={person.id}>
+              <div className="pp-live-avatar">{person.profile_image_url ? <img src={person.profile_image_url} alt="" /> : (person.full_name || person.email || "U").split(/\s+/).slice(0,2).map((part) => part[0]).join("").toUpperCase()}</div>
+              <div className="pp-live-person"><strong>{person.full_name}</strong><span>{person.email}</span><small>{person.phone || "No phone number"} · {person.hourly_rate == null ? "Rate not set" : `Rate ${person.hourly_rate}/hr`}</small></div>
+              <span className={`pp-live-role pp-live-role--${person.role}`}><ShieldCheck size={13}/> {person.role}</span>
+              {canManage && person.role !== "developer" && <div className="pp-live-actions"><button type="button" onClick={() => openEdit(person)} aria-label="Edit staff"><Pencil size={15}/></button><button type="button" onClick={() => remove(person)} aria-label="Delete staff"><Trash2 size={15}/></button></div>}
+            </article>
+          ))}
+          {!loading && !filtered.length && <div className="pp-empty-state">No staff members found.</div>}
         </div>
       </div>
-
-      <div className="pp-privacy-note">
-        <ShieldCheck size={15} />
-        <span>Your team’s information is private and secure.</span>
-      </div>
+      {modal && <div className="pp-modal-backdrop" onMouseDown={() => !saving && setModal(null)}>
+        <form className="pp-live-modal" onSubmit={save} onMouseDown={(event) => event.stopPropagation()}>
+          <header><div><h2>{modal.mode === "create" ? "Add staff member" : "Edit staff member"}</h2><p>Changes apply to this organization's workforce.</p></div><button type="button" onClick={() => setModal(null)}><X size={18}/></button></header>
+          <label>Full name<input value={form.full_name} onChange={(event) => setForm({ ...form, full_name: event.target.value })} required/></label>
+          <label>Email address<input type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required/></label>
+          <label>Phone number<input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })}/></label>
+          <label>Access level<select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>{(isDeveloper ? [...roles, "developer"] : roles).map((role) => <option key={role} value={role}>{role[0].toUpperCase() + role.slice(1)}</option>)}</select></label>
+          <label>Hourly rate<input type="number" min="0" step="0.01" value={form.hourly_rate} onChange={(event) => setForm({ ...form, hourly_rate: event.target.value })}/></label>
+          {modal.mode === "create" && <label>Temporary password<input type="password" minLength="8" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required/></label>}
+          {isDeveloper && modal.mode === "create" && <label>Organization<select value={form.organization_id} onChange={(event) => setForm({ ...form, organization_id: event.target.value })} required>{organizations.map((organization) => <option value={organization.id} key={organization.id}>{organization.name}</option>)}</select></label>}
+          {error && <div className="pp-error">{error}</div>}
+          <footer><button type="button" className="pp-outline-button" onClick={() => setModal(null)} disabled={saving}>Cancel</button><button type="submit" className="pp-primary-button" disabled={saving}>{saving ? "Saving…" : "Save staff"}</button></footer>
+        </form>
+      </div>}
     </section>
-  );
-}
-
-export default function PlannrPeoples() {
-  const [people, setPeople] = useState(INITIAL_PEOPLE);
-  const [modalPerson, setModalPerson] = useState(null); // null = closed, {} = add, personObj = edit
-  const [toast, setToast] = useState("");
-
-  const handleSaveMember = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const name = formData.get("name");
-    const email = formData.get("email");
-    const role = formData.get("role");
-    const department = formData.get("department");
-
-    if (modalPerson?.id) {
-      setPeople((prev) =>
-        prev.map((p) =>
-          p.id === modalPerson.id ? { ...p, name, email, role, department } : p
-        )
-      );
-      showToast(`${name}'s details updated successfully.`);
-    } else {
-      const initials =
-        name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2) || "EX";
-      const newPerson = {
-        id: Date.now(),
-        name,
-        email,
-        role,
-        department,
-        status: "Active",
-        shifts: "0 shifts / 0 hrs",
-        tone: "blue",
-        initials,
-      };
-      setPeople((prev) => [newPerson, ...prev]);
-      showToast(`${name} added to the workspace.`);
-    }
-
-    setModalPerson(null);
-  };
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3500);
-  };
-
-  return (
-    <>
-      {/* Content-only – no Sidebar / Header (provided by AdminLayout) */}
-      <div className="pp-page">
-        <div className="pp-page-overview">
-          <div className="pp-heading-row">
-            <div>
-              <h1>Peoples</h1>
-              <p>A great team starts with the right people. Manage yours here.</p>
-            </div>
-
-            <div className="pp-week-indicator">
-              <CalendarDays size={15} />
-              <span>This week · Oct 5–11</span>
-            </div>
-          </div>
-
-          <div className="pp-metrics">
-            <MetricCard
-              icon={Users}
-              title="Total staff"
-              value={people.length}
-              context="Across departments"
-              tone="blue"
-            />
-            <MetricCard
-              icon={UserCheck}
-              title="Active members"
-              value={people.filter((p) => p.status === "Active").length}
-              context="Ready for work"
-              tone="green"
-            />
-            <MetricCard
-              icon={Coffee}
-              title="On leave"
-              value={people.filter((p) => p.status === "On Leave").length}
-              context="Time off scheduled"
-              tone="peach"
-            />
-          </div>
-        </div>
-
-        <PeopleDirectory people={people} onEditPerson={(person) => setModalPerson(person)} />
-      </div>
-
-      {/* --- ADD / EDIT MEMBER MODAL --- */}
-      {modalPerson !== null && (
-        <div className="pp-modal-backdrop" onClick={() => setModalPerson(null)}>
-          <div className="pp-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="pp-modal-header">
-              <h2>{modalPerson.id ? "Edit Team Member" : "Add Team Member"}</h2>
-              <button className="pp-close-btn" onClick={() => setModalPerson(null)}>
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleSaveMember} className="pp-modal-body">
-              <label>
-                <span>Full Name</span>
-                <input
-                  name="name"
-                  defaultValue={modalPerson.name || ""}
-                  placeholder="e.g. Alex Morgan"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Email Address</span>
-                <input
-                  type="email"
-                  name="email"
-                  defaultValue={modalPerson.email || ""}
-                  placeholder="e.g. alex.m@acme.com"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Role</span>
-                <input
-                  name="role"
-                  defaultValue={modalPerson.role || ""}
-                  placeholder="e.g. Operations Manager"
-                  required
-                />
-              </label>
-
-              <label>
-                <span>Department</span>
-                <select name="department" defaultValue={modalPerson.department || "Engineering"}>
-                  <option value="Design">Design</option>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Finance">Finance</option>
-                  <option value="People Ops">People Ops</option>
-                </select>
-              </label>
-
-              <div className="pp-modal-actions">
-                <button
-                  type="button"
-                  className="pp-outline-button"
-                  onClick={() => setModalPerson(null)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="pp-primary-button">
-                  <CheckCircle2 size={16} /> Save Member
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {toast && <div className="pp-toast">{toast}</div>}
-    </>
   );
 }

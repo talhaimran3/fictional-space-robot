@@ -1,14 +1,24 @@
 import db from "../config/database.js";
 
+const attendanceScope = (user) => [
+  user?.role === "developer",
+  user?.role || "",
+  user?.organizationId || null,
+  user?.id || user?.userId || null,
+];
+
 /**
- * GET /api/attendance/all
- * Shifts are the base collection so scheduled work remains visible even
- * before an attendance row has been created.
+ * Managers/admins receive organization-wide records; staff receive only
+ * shifts assigned to their own user id. Developers receive all organizations.
  */
 export const getAttendance = async (req, res) => {
   try {
-    const isDeveloper = req.user?.role === "developer";
-    const organizationId = req.user?.organizationId || null;
+    const scope = attendanceScope(req.user);
+    const scopeSql = `(
+      $1::boolean = TRUE
+      OR ($2::text IN ('admin', 'manager') AND s.organization_id = $3::uuid)
+      OR ($2::text = 'staff' AND s.employee_id = $4::uuid)
+    )`;
 
     const [recordsResult, summaryResult] = await Promise.all([
       db.query(
@@ -41,10 +51,10 @@ export const getAttendance = async (req, res) => {
           LEFT JOIN attendance a
             ON a.shift_id = s.id
            AND a.organization_id = s.organization_id
-          WHERE ($1::boolean = TRUE OR s.organization_id = $2::uuid)
+          WHERE ${scopeSql}
           ORDER BY s.start_time ASC;
         `,
-        [isDeveloper, organizationId],
+        scope,
       ),
       db.query(
         `
@@ -74,9 +84,9 @@ export const getAttendance = async (req, res) => {
             ON a.shift_id = s.id
            AND a.organization_id = s.organization_id
           WHERE s.status::text <> 'cancelled'
-            AND ($1::boolean = TRUE OR s.organization_id = $2::uuid);
+            AND ${scopeSql};
         `,
-        [isDeveloper, organizationId],
+        scope,
       ),
     ]);
 
@@ -156,8 +166,148 @@ export const getAttendance = async (req, res) => {
 };
 
 /**
- * PUT /api/attendance/shift/:shiftId
- * Creates the attendance row on first save, then updates that same row.
+ * Staff clock-in uses the database clock, not a timestamp supplied by the
+ * browser. A staff member can only clock into a shift assigned to their id.
+ */
+export const clockInOwnShift = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { shiftId } = req.params;
+    const shiftResult = await db.query(
+      `
+        SELECT s.id, s.organization_id, s.employee_id, s.start_time, s.end_time,
+               s.status AS shift_status, u.hourly_rate,
+               a.clock_in_at, a.clock_out_at, a.status AS attendance_status
+        FROM shifts s
+        LEFT JOIN users u
+          ON u.id = s.employee_id
+         AND u.organization_id = s.organization_id
+        LEFT JOIN attendance a
+          ON a.shift_id = s.id
+         AND a.organization_id = s.organization_id
+        WHERE s.id = $1
+          AND s.employee_id = $2
+      `,
+      [shiftId, userId],
+    );
+
+    if (!shiftResult.rows.length) {
+      return res.status(404).json({ error: "This shift is not assigned to your account." });
+    }
+
+    const shift = shiftResult.rows[0];
+    if (["cancelled", "no-show", "no_show"].includes(String(shift.shift_status).toLowerCase())) {
+      return res.status(409).json({ error: "You cannot clock into a cancelled or missed shift." });
+    }
+    if (shift.clock_in_at) {
+      return res.status(409).json({ error: "You have already clocked in for this shift." });
+    }
+
+    const allocatedHours = Math.max(
+      0,
+      Number(((new Date(shift.end_time) - new Date(shift.start_time)) / 3600000).toFixed(2)),
+    );
+
+    const saved = await db.query(
+      `
+        INSERT INTO attendance (
+          organization_id, user_id, shift_id, allocated_hours,
+          clock_in_at, clock_out_at, break_minutes, worked_hours,
+          status, hourly_rate, labor_cost, updated_at
+        )
+        VALUES ($1, $2, $3, $4, NOW(), NULL, 0, NULL, 'in_progress', $5, NULL, NOW())
+        ON CONFLICT (shift_id)
+        DO UPDATE SET
+          organization_id = EXCLUDED.organization_id,
+          user_id = EXCLUDED.user_id,
+          allocated_hours = EXCLUDED.allocated_hours,
+          clock_in_at = NOW(),
+          clock_out_at = NULL,
+          break_minutes = 0,
+          worked_hours = NULL,
+          status = 'in_progress',
+          hourly_rate = EXCLUDED.hourly_rate,
+          labor_cost = NULL,
+          updated_at = NOW()
+        WHERE attendance.clock_in_at IS NULL
+        RETURNING *;
+      `,
+      [shift.organization_id, userId, shiftId, allocatedHours, shift.hourly_rate],
+    );
+
+    if (!saved.rows.length) {
+      return res.status(409).json({ error: "This shift has already been clocked into." });
+    }
+    return res.json({ success: true, data: saved.rows[0] });
+  } catch (error) {
+    console.error("Staff clock-in failed:", error);
+    return res.status(500).json({ error: "Unable to clock in. Please try again." });
+  }
+};
+
+/**
+ * Staff clock-out also uses the database clock. Worked hours are calculated
+ * server-side using the recorded break minutes.
+ */
+export const clockOutOwnShift = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { shiftId } = req.params;
+    const saved = await db.query(
+      `
+        UPDATE attendance a
+        SET clock_out_at = NOW(),
+            worked_hours = ROUND(
+              GREATEST(
+                0,
+                EXTRACT(EPOCH FROM (
+                  NOW() - a.clock_in_at - (COALESCE(a.break_minutes, 0) * INTERVAL '1 minute')
+                )) / 3600
+              )::numeric,
+              2
+            ),
+            labor_cost = CASE
+              WHEN a.labor_cost IS NULL AND a.hourly_rate IS NOT NULL THEN
+                ROUND(
+                  GREATEST(
+                    0,
+                    EXTRACT(EPOCH FROM (
+                      NOW() - a.clock_in_at - (COALESCE(a.break_minutes, 0) * INTERVAL '1 minute')
+                    )) / 3600
+                  )::numeric * a.hourly_rate,
+                  2
+                )
+              ELSE a.labor_cost
+            END,
+            status = 'pending',
+            updated_at = NOW()
+        FROM shifts s
+        WHERE a.shift_id = s.id
+          AND a.shift_id = $1
+          AND a.user_id = $2
+          AND s.employee_id = $2
+          AND a.clock_in_at IS NOT NULL
+          AND a.clock_out_at IS NULL
+          AND COALESCE(a.status, '') NOT IN ('approved', 'rejected', 'absent')
+        RETURNING a.*;
+      `,
+      [shiftId, userId],
+    );
+
+    if (!saved.rows.length) {
+      return res.status(409).json({
+        error: "No active clock-in was found for this shift, or the timecard is already finalized.",
+      });
+    }
+    return res.json({ success: true, data: saved.rows[0] });
+  } catch (error) {
+    console.error("Staff clock-out failed:", error);
+    return res.status(500).json({ error: "Unable to clock out. Please try again." });
+  }
+};
+
+/**
+ * Manager/admin attendance editor. Creates the attendance row on first save.
  */
 export const saveShiftAttendance = async (req, res) => {
   try {
@@ -192,8 +342,11 @@ export const saveShiftAttendance = async (req, res) => {
     if (clock_in_at && clock_out_at && new Date(clock_out_at) < new Date(clock_in_at)) {
       return res.status(400).json({ error: "Clock-out must be after clock-in." });
     }
-    if (labor_cost !== undefined && labor_cost !== null &&
-        (!Number.isFinite(Number(labor_cost)) || Number(labor_cost) < 0)) {
+    if (
+      labor_cost !== undefined &&
+      labor_cost !== null &&
+      (!Number.isFinite(Number(labor_cost)) || Number(labor_cost) < 0)
+    ) {
       return res.status(400).json({ error: "Labor cost must be a non-negative number." });
     }
 
@@ -201,8 +354,7 @@ export const saveShiftAttendance = async (req, res) => {
     const organizationId = req.user?.organizationId || null;
     const shiftResult = await db.query(
       `
-        SELECT s.id, s.organization_id, s.employee_id, s.start_time, s.end_time,
-               u.hourly_rate
+        SELECT s.id, s.organization_id, s.employee_id, s.start_time, s.end_time, u.hourly_rate
         FROM shifts s
         LEFT JOIN users u
           ON u.id = s.employee_id
@@ -216,7 +368,6 @@ export const saveShiftAttendance = async (req, res) => {
     if (!shiftResult.rows.length) {
       return res.status(404).json({ error: "Shift not found." });
     }
-
     const shift = shiftResult.rows[0];
     if (!shift.employee_id) {
       return res.status(400).json({ error: "Assign an employee to this shift before recording attendance." });
@@ -226,7 +377,6 @@ export const saveShiftAttendance = async (req, res) => {
       clock_in_at && clock_out_at
         ? Math.max(0, Number(((new Date(clock_out_at) - new Date(clock_in_at) - breakMinutes * 60000) / 3600000).toFixed(2)))
         : null;
-
     const existingResult = await db.query(
       "SELECT labor_cost FROM attendance WHERE shift_id = $1 AND organization_id = $2",
       [shiftId, shift.organization_id],
@@ -240,7 +390,6 @@ export const saveShiftAttendance = async (req, res) => {
           : workedHours !== null && shift.hourly_rate !== null
             ? Number((workedHours * Number(shift.hourly_rate)).toFixed(2))
             : null;
-
     const allocatedHours = Math.max(
       0,
       Number(((new Date(shift.end_time) - new Date(shift.start_time)) / 3600000).toFixed(2)),
@@ -256,6 +405,9 @@ export const saveShiftAttendance = async (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
         ON CONFLICT (shift_id)
         DO UPDATE SET
+          organization_id = EXCLUDED.organization_id,
+          user_id = EXCLUDED.user_id,
+          allocated_hours = EXCLUDED.allocated_hours,
           clock_in_at = EXCLUDED.clock_in_at,
           clock_out_at = EXCLUDED.clock_out_at,
           break_minutes = EXCLUDED.break_minutes,
@@ -290,5 +442,38 @@ export const saveShiftAttendance = async (req, res) => {
       return res.status(400).json({ error: "Invalid attendance data." });
     }
     return res.status(500).json({ error: "Unable to save attendance." });
+  }
+};
+
+
+/**
+ * DELETE /api/attendance/shift/:shiftId
+ * Managers/admins may remove an attendance record for a shift in their scope.
+ * The shift itself remains scheduled; a future clock-in can create a new row.
+ */
+export const deleteShiftAttendance = async (req, res) => {
+  try {
+    const isDeveloper = req.user?.role === "developer";
+    const organizationId = req.user?.organizationId || null;
+    const { shiftId } = req.params;
+    const result = await db.query(
+      `
+        DELETE FROM attendance a
+        USING shifts s
+        WHERE a.shift_id = s.id
+          AND a.shift_id = $1
+          AND ($2::boolean = TRUE OR s.organization_id = $3::uuid)
+        RETURNING a.id;
+      `,
+      [shiftId, isDeveloper, organizationId],
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Attendance record not found in your organization." });
+    }
+    return res.json({ success: true, message: "Attendance record deleted." });
+  } catch (error) {
+    console.error("Failed to delete attendance:", error);
+    return res.status(500).json({ error: "Unable to delete this attendance record." });
   }
 };

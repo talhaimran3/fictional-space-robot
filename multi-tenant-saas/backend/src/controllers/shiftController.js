@@ -25,6 +25,16 @@ export const addShifts = async (req, res) => {
       });
     }
 
+    if (employee_id) {
+      const employeeCheck = await db.query(
+        "SELECT id FROM users WHERE id = $1 AND organization_id = $2",
+        [employee_id, organization_id],
+      );
+      if (!employeeCheck.rows.length) {
+        return res.status(400).json({ error: "The selected employee does not belong to this organization." });
+      }
+    }
+
     const query = `
       INSERT INTO shifts
         (organization_id, employee_id, start_time, end_time, status, notes, name, created_by)
@@ -142,6 +152,16 @@ export const updateShift = async (req, res, next) => {
       return res.status(400).json({
         error: "Choose valid start and end times, with the end after the start.",
       });
+    }
+
+    if (employee_id) {
+      const employeeCheck = await db.query(
+        "SELECT id FROM users WHERE id = $1 AND organization_id = $2",
+        [employee_id, organization_id],
+      );
+      if (!employeeCheck.rows.length) {
+        return res.status(400).json({ error: "The selected employee does not belong to this organization." });
+      }
     }
 
     const query = `

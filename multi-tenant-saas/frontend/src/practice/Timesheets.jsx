@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Save,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import apiClient from "../api/client";
 import { useAuth } from "../context/authContext";
@@ -174,6 +175,25 @@ export default function PlannrTimesheets() {
       setSaveError(
         error?.response?.data?.error || "Unable to update timecard status.",
       );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAttendance = async () => {
+    if (!selectedTimecard?.attendance) return;
+    if (!window.confirm("Delete this attendance record? The scheduled shift will remain.")) return;
+    try {
+      setSaving(true);
+      setSaveError("");
+      await apiClient.delete(
+        `/attendance/shift/${encodeURIComponent(selectedTimecard.shiftId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setSelectedTimecard(null);
+      await fetchAttendance();
+    } catch (error) {
+      setSaveError(error?.response?.data?.error || "Unable to delete this attendance record.");
     } finally {
       setSaving(false);
     }
@@ -420,6 +440,16 @@ export default function PlannrTimesheets() {
             </div>
             {saveError && <p className="pt-save-error">{saveError}</p>}
             <div className="pt-modal-actions pt-editor-actions">
+              {selectedTimecard.attendance && (
+                <button
+                  type="button"
+                  className="pt-outline-btn flag"
+                  disabled={saving}
+                  onClick={handleDeleteAttendance}
+                >
+                  <Trash2 size={15} /> Delete record
+                </button>
+              )}
               <button
                 type="button"
                 className="pt-outline-btn flag"

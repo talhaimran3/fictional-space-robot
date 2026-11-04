@@ -62,6 +62,7 @@ export default function PlannrShifts() {
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
   const isDeveloper = user?.role === "developer";
+  const canManage = ["developer", "admin", "manager"].includes(user?.role);
 
   useEffect(() => {
     if (organizationsLoading || organizations.length === 0) return;
@@ -125,12 +126,12 @@ export default function PlannrShifts() {
   };
 
   const openEditShift = (shift) => {
-    if (!isDeveloper) return;
+    if (!canManage) return;
     setModal({ shift, initialValues: {} });
   };
 
   const saveShift = async (payload) => {
-    if (!isDeveloper) throw new Error("Only developers can manage shifts.");
+    if (!canManage) throw new Error("You do not have permission to manage shifts.");
     if (!organizationId) throw new Error("Select an organization first.");
 
     setSaving(true);
@@ -166,7 +167,7 @@ export default function PlannrShifts() {
   };
 
   const deleteShift = async () => {
-    if (!isDeveloper || !modal?.shift || !organizationId) return;
+    if (!canManage || !modal?.shift || !organizationId) return;
     if (!window.confirm("Delete this shift permanently?")) return;
 
     setSaving(true);
@@ -202,7 +203,7 @@ export default function PlannrShifts() {
          <span
             className={`pln-shifts__access ${isDeveloper ? "is-developer" : ""}`}
           >
-            {isDeveloper ? "Developer access" : "Read-only"}
+            {canManage ? (isDeveloper ? "Developer access" : "Organization management") : "Read-only"}
           </span>
           <span className="pln-shifts__count">
             {shifts.length} {shifts.length === 1 ? "shift" : "shifts"}
@@ -305,7 +306,7 @@ export default function PlannrShifts() {
           >
             <RefreshCw size={17} />
           </button>
-          {isDeveloper && (
+          {canManage && (
             <button
               type="button"
               className="pln-shifts__button pln-shifts__button--primary"
@@ -337,7 +338,7 @@ export default function PlannrShifts() {
           shifts={shifts}
           employees={employees}
           loading={shiftsLoading}
-          canManage={isDeveloper}
+          canManage={canManage}
           onSelectShift={openEditShift}
           onAddShift={openNewShift}
         />
@@ -355,7 +356,7 @@ export default function PlannrShifts() {
         <span>Times are shown in your browser’s local time.</span>
       </footer>
 
-      {modal && isDeveloper && (
+      {modal && canManage && (
         <ShiftModal
           organizationName={selectedOrganization?.name}
           employees={employees}

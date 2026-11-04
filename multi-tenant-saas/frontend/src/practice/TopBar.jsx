@@ -4,10 +4,10 @@ import { useAuth } from "../context/authContext";
 import "./TopBar.css";
 import { useNavigate } from "react-router-dom";
 
-function Avatar({ initials, tone = "green", size = "small" }) {
+function Avatar({ initials, imageUrl, tone = "green", size = "small" }) {
   return (
     <div className={`pl-avatar pl-avatar--${tone} pl-avatar--${size}`}>
-      {initials}
+      {imageUrl ? <img src={imageUrl} alt="" /> : initials}
     </div>
   );
 }
@@ -77,9 +77,9 @@ const navigate = useNavigate();
         <button
           className="pl-profile"
           type="button"
-          onClick={() => alert("Profile settings are not configured yet.")}
+          onClick={() => navigate("/admin2/profile")}
         >
-          <Avatar initials={initials} />
+          <Avatar initials={initials} imageUrl={user?.profile_image_url} />
           <div className="pl-profile-info">
             <strong>{displayName}</strong>
             <span>{roleLabel(user?.role)}</span>

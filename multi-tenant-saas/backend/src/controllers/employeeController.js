@@ -1,6 +1,34 @@
+import crypto from "node:crypto";
+import bcrypt from "bcryptjs";
 import db from "../config/database.js";
-import dotenv from "dotenv";
-dotenv.config();
+import {
+  deleteNeonObject,
+  getNeonObjectUrl,
+  uploadNeonObject,
+} from "../utils/neonObjectStorage.js";
+
+const profileImageUrl = async (key) => {
+  if (!key) return null;
+  try {
+    return await getNeonObjectUrl(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeEmployee = async (row) => ({
+  id: row.id,
+  email: row.email,
+  full_name: row.full_name,
+  role: row.role,
+  organization_id: row.organization_id,
+  phone: row.phone || null,
+  hourly_rate: row.hourly_rate ?? null,
+  status: row.status,
+  profile_image_url: await profileImageUrl(row.profile_image_key),
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
 
 export const getAllEmployees = async (req, res) => {
   try {
@@ -9,6 +37,7 @@ export const getAllEmployees = async (req, res) => {
     const queryText = `
       SELECT
         u.id, u.email, u.full_name, u.role, u.organization_id,
+        u.phone, u.hourly_rate, u.profile_image_key, u.status,
         u.created_at, u.updated_at,
         jsonb_build_object('id', o.id, 'name', o.name, 'slug', o.slug) AS organization,
         COALESCE(
@@ -22,7 +51,7 @@ export const getAllEmployees = async (req, res) => {
       ORDER BY u.created_at DESC;
     `;
     const { rows } = await db.query(queryText, [isDeveloper, organizationId]);
-    return res.status(200).json({ success: true, employees: rows });
+    return res.status(200).json({ success: true, employees: await Promise.all(rows.map(safeEmployee)) });
   } catch (error) {
     console.error("Error fetching users:", error);
     return res.status(500).json({
@@ -32,8 +61,138 @@ export const getAllEmployees = async (req, res) => {
   }
 };
 
+export const getMyProfile = async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT id, email, full_name, role, organization_id, phone,
+              profile_image_key, status, created_at, updated_at
+       FROM users WHERE id = $1 LIMIT 1`,
+      [req.user.id],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+  } catch (error) {
+    console.error("Failed to load profile:", error);
+    return res.status(500).json({ success: false, message: "Unable to load your profile." });
+  }
+};
+
+export const updateMyProfile = async (req, res) => {
+  const { full_name, email, phone } = req.body || {};
+  if (full_name === undefined && email === undefined && phone === undefined) {
+    return res.status(400).json({ error: "Provide a name, email, or phone number to update." });
+  }
+  if (full_name !== undefined && (typeof full_name !== "string" || !full_name.trim())) {
+    return res.status(400).json({ error: "Name cannot be empty." });
+  }
+  if (email !== undefined && (typeof email !== "string" || !email.trim())) {
+    return res.status(400).json({ error: "Email cannot be empty." });
+  }
+  if (phone !== undefined && phone !== null && typeof phone !== "string") {
+    return res.status(400).json({ error: "Phone number must be text." });
+  }
+
+  try {
+    const result = await db.query(
+      `UPDATE users
+       SET full_name = COALESCE($1, full_name),
+           email = COALESCE($2, email),
+           phone = CASE WHEN $3::boolean THEN $4 ELSE phone END,
+           updated_at = NOW()
+       WHERE id = $5
+       RETURNING id, email, full_name, role, organization_id, phone,
+                 profile_image_key, status, created_at, updated_at`,
+      [
+        full_name === undefined ? null : full_name.trim(),
+        email === undefined ? null : email.trim().toLowerCase(),
+        phone !== undefined,
+        phone === undefined ? null : (phone.trim() || null),
+        req.user.id,
+      ],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "User not found." });
+    }
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "That email address is already in use." });
+    }
+    return res.status(500).json({ error: "Unable to update your profile." });
+  }
+};
+
+export const uploadProfilePicture = async (req, res) => {
+  const contentType = String(req.headers["content-type"] || "").toLowerCase();
+  const extensions = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const extension = extensions[contentType];
+  const body = req.body;
+
+  if (!extension || !Buffer.isBuffer(body) || body.length === 0) {
+    return res.status(400).json({ error: "Upload a JPEG, PNG, or WebP image." });
+  }
+  if (body.length > 5 * 1024 * 1024) {
+    return res.status(413).json({ error: "Profile pictures must be 5 MB or smaller." });
+  }
+
+  try {
+    const current = await db.query(
+      "SELECT profile_image_key FROM users WHERE id = $1",
+      [req.user.id],
+    );
+    if (!current.rows.length) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    const oldKey = current.rows[0].profile_image_key;
+    const key = "avatars/" + req.user.id + "/" + crypto.randomUUID() + "." + extension;
+    await uploadNeonObject(key, body, contentType);
+
+    const result = await db.query(
+      `UPDATE users
+       SET profile_image_key = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, email, full_name, role, organization_id, phone,
+                 profile_image_key, status, created_at, updated_at`,
+      [key, req.user.id],
+    );
+
+    if (oldKey) {
+      try {
+        await deleteNeonObject(oldKey);
+      } catch (deleteError) {
+        console.warn("Old profile picture could not be removed:", deleteError.message);
+      }
+    }
+
+    return res.json({ success: true, employee: await safeEmployee(result.rows[0]) });
+  } catch (error) {
+    console.error("Profile picture upload failed:", error);
+    return res.status(500).json({
+      error: error.message?.includes("Neon Object Storage")
+        ? error.message
+        : "Unable to upload your profile picture.",
+    });
+  }
+};
+
 export const addEmployee = async (req, res) => {
-  const { organization_id, name, email, role = "staff", password } = req.body;
+  const {
+    organization_id,
+    name,
+    email,
+    role = "staff",
+    password,
+    phone = null,
+    hourly_rate = null,
+  } = req.body || {};
 
   if (!organization_id || !name?.trim() || !email?.trim() || !password) {
     return res.status(400).json({
@@ -41,29 +200,35 @@ export const addEmployee = async (req, res) => {
       message: "Organization, name, email and password are required.",
     });
   }
+  if (!["staff", "manager", "admin", "developer"].includes(role)) {
+    return res.status(400).json({ success: false, message: "Invalid user role." });
+  }
 
   try {
     const orgCheck = await db.query(
       "SELECT id FROM organizations WHERE id = $1",
-      [organization_id]
+      [organization_id],
     );
-    if (orgCheck.rows.length === 0) {
+    if (!orgCheck.rows.length) {
       return res.status(404).json({ success: false, message: "Organization not found." });
     }
 
     const existing = await db.query(
       "SELECT id FROM users WHERE LOWER(email) = LOWER($1)",
-      [email.trim()]
+      [email.trim()],
     );
-    if (existing.rows.length > 0) {
+    if (existing.rows.length) {
       return res.status(409).json({ success: false, message: "A user with this email already exists." });
     }
 
-    const hashed = await (await import("bcryptjs")).hash(password, 10);
+    if (hourly_rate !== null && hourly_rate !== "" && (!Number.isFinite(Number(hourly_rate)) || Number(hourly_rate) < 0)) {
+      return res.status(400).json({ success: false, message: "Hourly rate must be a non-negative number." });
+    }
+    const hashed = await bcrypt.hash(password, 10);
     const result = await db.query(
-      `INSERT INTO users (email, password_hash, password, full_name, role, organization_id)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, email, full_name, role, organization_id, created_at`,
+      `INSERT INTO users (email, password_hash, password, full_name, role, organization_id, phone, hourly_rate)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, email, full_name, role, organization_id, phone, hourly_rate, created_at`,
       [
         email.trim().toLowerCase(),
         hashed,
@@ -71,7 +236,9 @@ export const addEmployee = async (req, res) => {
         name.trim(),
         role,
         organization_id,
-      ]
+        phone,
+        hourly_rate === "" || hourly_rate === null ? null : Number(hourly_rate),
+      ],
     );
 
     return res.status(201).json({ success: true, employee: result.rows[0] });
@@ -92,7 +259,11 @@ export const addEmployee = async (req, res) => {
 
 export const updateEmployee = async (req, res) => {
   const { id } = req.params;
-  const { organization_id, full_name, role, email } = req.body;
+  const { organization_id, full_name, role, email, phone, hourly_rate } = req.body || {};
+  if (hourly_rate !== undefined && hourly_rate !== null && hourly_rate !== "" &&
+      (!Number.isFinite(Number(hourly_rate)) || Number(hourly_rate) < 0)) {
+    return res.status(400).json({ success: false, message: "Hourly rate must be a non-negative number." });
+  }
 
   try {
     const queryText = `
@@ -101,24 +272,34 @@ export const updateEmployee = async (req, res) => {
           full_name = COALESCE($2, full_name),
           role = COALESCE($3, role),
           email = COALESCE($4, email),
+          phone = CASE WHEN $5::boolean THEN $6 ELSE phone END,
+          hourly_rate = CASE WHEN $7::boolean THEN $8::numeric ELSE hourly_rate END,
           updated_at = NOW()
-      WHERE id = $5
-      RETURNING id, email, full_name, role, organization_id, created_at, updated_at;
+      WHERE id = $9
+      RETURNING id, email, full_name, role, organization_id, phone, hourly_rate,
+                status, created_at, updated_at;
     `;
     const { rows } = await db.query(queryText, [
       organization_id || null,
-      full_name || null,
+      full_name?.trim() || null,
       role || null,
-      email ? email.trim().toLowerCase() : null,
+      email?.trim() ? email.trim().toLowerCase() : null,
+      phone !== undefined,
+      phone === undefined ? null : (phone?.trim() || null),
+      hourly_rate !== undefined,
+      hourly_rate === "" || hourly_rate === null ? null : Number(hourly_rate),
       id,
     ]);
 
-    if (rows.length === 0) {
+    if (!rows.length) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
     return res.status(200).json({ success: true, employee: rows[0] });
   } catch (error) {
     console.error("Error updating user:", error);
+    if (error.code === "23505") {
+      return res.status(409).json({ success: false, message: "A user with this email already exists." });
+    }
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating the user.",
@@ -127,15 +308,23 @@ export const updateEmployee = async (req, res) => {
 };
 
 export const deleteEmployee = async (req, res) => {
-  const { id } = req.params;
   try {
-    const { rows } = await db.query("DELETE FROM users WHERE id = $1 RETURNING id", [id]);
-    if (rows.length === 0) {
+    const { rows } = await db.query(
+      "DELETE FROM users WHERE id = $1 RETURNING id",
+      [req.params.id],
+    );
+    if (!rows.length) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
     return res.status(200).json({ success: true, message: "User deleted successfully." });
   } catch (error) {
     console.error("Error deleting user:", error);
+    if (error.code === "23503") {
+      return res.status(409).json({
+        success: false,
+        message: "This user is still referenced by historical records. Deactivate the account instead of deleting it.",
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "An error occurred while deleting the user.",

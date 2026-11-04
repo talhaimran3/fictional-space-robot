@@ -1,10 +1,10 @@
 import express from "express";
 import { getorganizationsWithShifts } from "../controllers/shiftController.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
+import { requireWorkspaceManagement } from "../middleware/roleAccess.middleware.js";
 
 const router = express.Router();
 
-// Returns all organizations only to developers, or the caller's own organization.
-router.get("/all", authenticateToken, getorganizationsWithShifts);
+router.get("/all", authenticateToken, requireWorkspaceManagement, getorganizationsWithShifts);
 
 export default router;

@@ -1,36 +1,36 @@
 import db from "../config/database.js";
 
-export const allowOrganizationShiftRead = (req, res, next) => {
-  const requestedOrganizationId = req.params.id;
-  const userOrganizationId = req.user?.organizationId;
+const MANAGEMENT_ROLES = ["developer", "admin", "manager"];
+const ASSIGNABLE_ROLES = ["staff", "manager", "admin", "developer"];
 
-  if (
-    req.user?.role === "developer" ||
-    (userOrganizationId && userOrganizationId === requestedOrganizationId)
-  ) {
+const hasOrganizationAccess = (user, organizationId) =>
+  user?.role === "developer" ||
+  (MANAGEMENT_ROLES.includes(user?.role) &&
+    Boolean(user?.organizationId) &&
+    user.organizationId === organizationId);
+
+export const allowOrganizationShiftRead = (req, res, next) => {
+  if (hasOrganizationAccess(req.user, req.params.id)) {
     return next();
   }
-
   return res.status(403).json({
-    error: "You do not have access to shifts for this organization.",
+    error: "You do not have access to this organization's staff or shifts.",
   });
 };
 
-export const requireDeveloper = (req, res, next) => {
-  if (req.user?.role === "developer") {
+export const allowOrganizationShiftManage = (req, res, next) => {
+  if (hasOrganizationAccess(req.user, req.params.id)) {
     return next();
   }
-
   return res.status(403).json({
-    error: "Only developers can manage shifts at this stage.",
+    error: "Only developers, admins, or managers in this organization can manage its shifts.",
   });
 };
 
 /**
- * Interim staff policy: developers manage any organization; organization
- * owners/admins/managers can manage staff only within their own organization.
- * The uploaded schema currently omits "owner" from users.role's enum, so owner
- * role accounts will need a schema change before that role can actually be stored.
+ * Admins and managers can manage user accounts only inside their own
+ * organization. They may assign staff, manager, or admin roles as requested.
+ * Only developers may create or assign developer accounts.
  */
 export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
   const user = req.user;
@@ -38,60 +38,55 @@ export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
   if (!user) {
     return res.status(401).json({ error: "Authentication is required." });
   }
-  if (user.role === "developer") {
-    return next();
-  }
-  if (!["owner", "admin", "manager"].includes(user.role) || !user.organizationId) {
-    return res.status(403).json({
-      error: "Only developers, organization owners, admins, or managers can manage staff.",
-    });
+  if (!MANAGEMENT_ROLES.includes(user.role)) {
+    return res.status(403).json({ error: "You do not have permission to manage staff." });
   }
 
-  if (req.body?.role === "developer") {
-    return res.status(403).json({
-      error: "Only a developer can assign the developer role.",
-    });
+  const requestedRole = req.body?.role;
+  if (requestedRole && !ASSIGNABLE_ROLES.includes(requestedRole)) {
+    return res.status(400).json({ error: "Invalid user role." });
+  }
+  if (user.role !== "developer" && requestedRole === "developer") {
+    return res.status(403).json({ error: "Only developers can assign the developer role." });
   }
 
   try {
     if (req.method === "POST") {
-      if (req.body?.organization_id !== user.organizationId) {
-        return res.status(403).json({
-          error: "You can only add staff to your own organization.",
-        });
+      const organizationId = req.body?.organization_id;
+      if (user.role !== "developer" && organizationId !== user.organizationId) {
+        return res.status(403).json({ error: "You can only add users to your own organization." });
       }
       return next();
     }
 
     if (req.method === "PUT" || req.method === "DELETE") {
       const result = await db.query(
-        "SELECT organization_id FROM users WHERE id = $1",
-        [req.params.id]
+        "SELECT organization_id, role FROM users WHERE id = $1",
+        [req.params.id],
       );
-
-      if (result.rows.length === 0) {
+      if (!result.rows.length) {
         return res.status(404).json({ error: "Staff member not found." });
       }
 
-      if (result.rows[0].organization_id !== user.organizationId) {
-        return res.status(403).json({
-          error: "You can only manage staff in your own organization.",
-        });
+      const target = result.rows[0];
+      if (user.role !== "developer") {
+        if (target.organization_id !== user.organizationId) {
+          return res.status(403).json({ error: "You can only manage users in your own organization." });
+        }
+        if (target.role === "developer") {
+          return res.status(403).json({ error: "You cannot manage a developer account." });
+        }
+        if (
+          req.body?.organization_id &&
+          req.body.organization_id !== user.organizationId
+        ) {
+          return res.status(403).json({ error: "You cannot move users to another organization." });
+        }
       }
-
-      if (
-        req.body?.organization_id &&
-        req.body.organization_id !== user.organizationId
-      ) {
-        return res.status(403).json({
-          error: "You cannot move staff to another organization.",
-        });
-      }
-
       return next();
     }
 
-    return res.status(403).json({ error: "Staff action is not allowed." });
+    return res.status(403).json({ error: "This staff action is not allowed." });
   } catch (error) {
     return next(error);
   }

@@ -10,21 +10,20 @@ import {
 } from "../controllers/shiftController.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 import {
+  allowOrganizationShiftManage,
   allowOrganizationShiftRead,
-  requireDeveloper,
 } from "../middleware/shiftAccess.middleware.js";
+import { requireWorkspaceManagement } from "../middleware/roleAccess.middleware.js";
 
 const router = express.Router();
 
-// Developers see all organizations; other users see only their own organization.
-router.get("/all", authenticateToken, getAllorganizations);
+router.get("/all", authenticateToken, requireWorkspaceManagement, getAllorganizations);
 router.get("/:id", authenticateToken, allowOrganizationShiftRead, getorganizationById);
 router.get("/:id/all-shifts", authenticateToken, allowOrganizationShiftRead, getShifts);
 router.get("/:id/all-shifts/:shiftId", authenticateToken, allowOrganizationShiftRead, getShiftById);
 
-// Shift write actions remain developer-only for now.
-router.post("/:id/add-shift", authenticateToken, requireDeveloper, addShifts);
-router.put("/:id/edit-shift/:shiftId", authenticateToken, requireDeveloper, updateShift);
-router.delete("/:id/delete-shift/:shiftId", authenticateToken, requireDeveloper, deleteShift);
+router.post("/:id/add-shift", authenticateToken, allowOrganizationShiftManage, addShifts);
+router.put("/:id/edit-shift/:shiftId", authenticateToken, allowOrganizationShiftManage, updateShift);
+router.delete("/:id/delete-shift/:shiftId", authenticateToken, allowOrganizationShiftManage, deleteShift);
 
 export default router;
