@@ -30,7 +30,16 @@ app.use(
   cors({
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
-      if (frontendUrls.includes(origin)) return cb(null, true);
+      let isCodespacesFrontend = false;
+      try {
+        const parsedOrigin = new URL(origin);
+        isCodespacesFrontend =
+          parsedOrigin.protocol === "https:" &&
+          /-5173\\.app\\.github\\.dev$/i.test(parsedOrigin.hostname);
+      } catch {
+        isCodespacesFrontend = false;
+      }
+      if (frontendUrls.includes(origin) || isCodespacesFrontend) return cb(null, true);
       cb(new Error("CORS policy: origin not allowed"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
