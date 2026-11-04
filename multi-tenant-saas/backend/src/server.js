@@ -12,7 +12,6 @@ import developerDatabaseRoutes from "./routes/developerDatabaseRoutes.js";
 import cors from "cors";
 import db from "./config/database.js";
 import { getLocalProfileImageDirectory } from "./utils/localProfileStorage.js";
-import { basicRLS } from "./middleware/rls.middleware.js";
 dotenv.config();
 
 const app = express();
@@ -35,7 +34,7 @@ app.use(
         const parsedOrigin = new URL(origin);
         isCodespacesFrontend =
           parsedOrigin.protocol === "https:" &&
-          /-5173\\.app\\.github\\.dev$/i.test(parsedOrigin.hostname);
+          /-5173\.app\.github\.dev$/i.test(parsedOrigin.hostname);
       } catch {
         isCodespacesFrontend = false;
       }
