@@ -1,3 +1,8 @@
-# Local Neon configuration and credentials
-.env.storage
-backend/.env.local
+# Local Neon context and credentials
+.neon
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example

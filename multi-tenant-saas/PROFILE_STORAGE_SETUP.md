@@ -11,20 +11,23 @@ Neon Object Storage is S3-compatible. The `neon.ts` file declares a private `pro
 From the `multi-tenant-saas` directory, run:
 
 ```bash
+npm install -g neon@latest
+neon auth
+neon link
+neon deploy
+neon env pull --file backend/.env
+cd backend
 npm install
-npx neon@latest link
-npx neon@latest deploy
-npx neon@latest env pull --file .env.storage
 ```
 
-The CLI links to the Neon project/branch, deploys the private bucket, and pulls the generated S3 credentials. Copy these four values from `.env.storage` into your existing `backend/.env` file (do not replace the existing database URL or JWT secret):
+The CLI links to the Neon project/branch, deploys the private bucket, and pulls the generated S3 credentials directly into `backend/.env`. During `neon link`, choose the same project and branch that the API's existing `DATABASE_URL` uses; `env pull` also refreshes Neon-managed variables such as `DATABASE_URL`.
 
 - `AWS_ENDPOINT_URL_S3`
 - `AWS_REGION`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 
-Also set `NEON_STORAGE_BUCKET=profile-images` in `backend/.env`. The temporary `.env.storage` file is ignored by Git. Do not commit any storage credentials.
+Also set `NEON_STORAGE_BUCKET=profile-images` in `backend/.env`. Keep `backend/.env` out of Git. Do not commit any storage credentials.
 
 The API uploads JPEG, PNG, and WebP files up to 5 MB, stores each object's key in Postgres, and returns short-lived signed URLs because the bucket is private. Neon Object Storage is not available in every Neon region; if your project is outside the supported regions, profile-picture storage cannot be provisioned there yet.
 
