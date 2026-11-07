@@ -1,5 +1,13 @@
 import db from "../config/database.js";
 
+const isOrganizationActive = async (organizationId) => {
+  const result = await db.query(
+    "SELECT id FROM organizations WHERE id = $1 AND status = 'active'",
+    [organizationId],
+  );
+  return result.rows.length > 0;
+};
+
 export const addShifts = async (req, res) => {
   try {
     const { id: organization_id } = req.params;
@@ -11,6 +19,10 @@ export const addShifts = async (req, res) => {
       notes = null,
       name = "Scheduled Shift",
     } = req.body;
+
+    if (!(await isOrganizationActive(organization_id))) {
+      return res.status(409).json({ error: "This organization is inactive. Reactivate it before changing shifts." });
+    }
 
     if (!start_time || !end_time) {
       return res.status(400).json({
@@ -132,6 +144,9 @@ export const getShiftById = async (req, res, next) => {
 export const updateShift = async (req, res, next) => {
   try {
     const { id: organization_id, shiftId } = req.params;
+    if (!(await isOrganizationActive(organization_id))) {
+      return res.status(409).json({ error: "This organization is inactive. Reactivate it before changing shifts." });
+    }
     const {
       employee_id = null,
       name = "Scheduled Shift",
@@ -211,6 +226,9 @@ export const updateShift = async (req, res, next) => {
 export const deleteShift = async (req, res) => {
   try {
     const { id: organization_id, shiftId } = req.params;
+    if (!(await isOrganizationActive(organization_id))) {
+      return res.status(409).json({ error: "This organization is inactive. Reactivate it before changing shifts." });
+    }
     const { rows } = await db.query(
       `DELETE FROM shifts WHERE id = $1 AND organization_id = $2 RETURNING *;`,
       [shiftId, organization_id]
