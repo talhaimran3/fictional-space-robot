@@ -1,6 +1,26 @@
 import db from "../config/database.js";
+import { sendEmail } from "../services/emailService.js";
 import dotenv from "dotenv";
 dotenv.config();
+
+const notifyDeveloper = async (user, subject, message) => {
+  if (!user?.email) return;
+  try {
+    const safeName = String(user.full_name || "there").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[char]);
+    const safeMessage = String(message).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[char]);
+    await sendEmail({
+      to: user.email,
+      subject,
+      html: `<h2>Hello ${safeName},</h2><p>${safeMessage}</p>`,
+    });
+  } catch (error) {
+    console.error("Organization notification email failed:", error.message);
+  }
+};
 
 const getOrganizationInput = (req, res) => {
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
@@ -28,14 +48,15 @@ export const addorganization = async (req, res) => {
     const { name, slug } = input;
     const created_by = req.user.id;
 
-    const queryText = `
-      INSERT INTO organizations (name, slug, created_by)
-      VALUES ($1, $2, $3)
-      RETURNING id, name, slug, created_by, created_at;
-    `;
+    const { rows } = await db.query(
+      `INSERT INTO organizations (name, slug, created_by)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, slug, status, created_by, created_at;`,
+      [name, slug, created_by],
+    );
 
-    const { rows } = await db.query(queryText, [name, slug, created_by]);
-    res.status(201).json({ data: rows[0] });
+    await notifyDeveloper(req.user, "Organization created", `Organization "${name}" was created successfully.`);
+    return res.status(201).json({ data: rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
     if (error.code === "23505") {
@@ -52,26 +73,79 @@ export const editOrganization = async (req, res) => {
     if (!input) return;
     const { name, slug } = input;
 
-    const queryText = `
-      UPDATE organizations
-      SET name = $1, slug = $2
-      WHERE id = $3::uuid
-      RETURNING id, name, slug, created_by, created_at;
-    `;
+    const result = await db.query(
+      `UPDATE organizations
+       SET name = $1, slug = $2
+       WHERE id = $3::uuid
+       RETURNING id, name, slug, status, created_by, created_at;`,
+      [name, slug, id],
+    );
 
-    const result = await db.query(queryText, [name, slug, id]);
-
-    if (result.rows.length === 0) {
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Organization not found" });
     }
 
-    res.json({ data: result.rows[0] });
+    await notifyDeveloper(req.user, "Organization updated", `Organization "${name}" was updated successfully.`);
+    return res.json({ data: result.rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
     if (error.code === "23505") {
       return res.status(409).json({ error: "An organization with this name or slug already exists." });
     }
+    if (error.code === "22P02") {
+      return res.status(400).json({ error: "Invalid organization ID." });
+    }
     return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deactivateOrganization = async (req, res) => {
+  try {
+    const result = await db.query(
+      `UPDATE organizations
+       SET status = 'inactive'
+       WHERE id = $1::uuid AND status = 'active'
+       RETURNING id, name, slug, status, created_by, created_at;`,
+      [req.params.id],
+    );
+
+    if (!result.rows.length) {
+      const exists = await db.query("SELECT id, status FROM organizations WHERE id = $1::uuid", [req.params.id]);
+      if (!exists.rows.length) return res.status(404).json({ error: "Organization not found." });
+      return res.status(409).json({ error: "Organization is already inactive." });
+    }
+
+    await notifyDeveloper(req.user, "Organization deactivated", `Organization "${result.rows[0].name}" has been deactivated. Its records have been preserved.`);
+    return res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error("Failed to deactivate organization:", error);
+    if (error.code === "22P02") return res.status(400).json({ error: "Invalid organization ID." });
+    return res.status(500).json({ error: "Unable to deactivate organization." });
+  }
+};
+
+export const reactivateOrganization = async (req, res) => {
+  try {
+    const result = await db.query(
+      `UPDATE organizations
+       SET status = 'active'
+       WHERE id = $1::uuid AND status = 'inactive'
+       RETURNING id, name, slug, status, created_by, created_at;`,
+      [req.params.id],
+    );
+
+    if (!result.rows.length) {
+      const exists = await db.query("SELECT id, status FROM organizations WHERE id = $1::uuid", [req.params.id]);
+      if (!exists.rows.length) return res.status(404).json({ error: "Organization not found." });
+      return res.status(409).json({ error: "Organization is already active." });
+    }
+
+    await notifyDeveloper(req.user, "Organization reactivated", `Organization "${result.rows[0].name}" has been reactivated.`);
+    return res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error("Failed to reactivate organization:", error);
+    if (error.code === "22P02") return res.status(400).json({ error: "Invalid organization ID." });
+    return res.status(500).json({ error: "Unable to reactivate organization." });
   }
 };
 
@@ -85,6 +159,7 @@ export const getAllorganizations = async (req, res) => {
         o.id,
         o.name,
         o.slug,
+        o.status,
         o.created_by,
         o.created_at,
         COALESCE(
@@ -112,7 +187,7 @@ export const getAllorganizations = async (req, res) => {
     `;
 
     const { rows } = await db.query(queryText, [isDeveloper, organizationId]);
-    res.json({ data: rows });
+    return res.json({ data: rows });
   } catch (error) {
     console.error("Database query failed:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -129,9 +204,8 @@ export const getAllUsers = async (req, res) => {
       WHERE ($1::boolean = TRUE OR organization_id = $2::uuid)
       ORDER BY created_at DESC;
     `;
-
     const result = await db.query(queryText, [isDeveloper, organizationId]);
-    res.json({ data: result.rows });
+    return res.json({ data: result.rows });
   } catch (error) {
     console.error("Database query failed:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -161,7 +235,7 @@ export const getAllShifts = async (req, res) => {
       db.query(queryText, [isDeveloper, organizationId]),
       db.query(countsQuery, [isDeveloper, organizationId]),
     ]);
-    res.json({ data: result.rows, counts: countsResult.rows[0] });
+    return res.json({ data: result.rows, counts: countsResult.rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
     return res.status(500).json({ error: "Internal server error" });
