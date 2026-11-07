@@ -61,7 +61,10 @@ export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
 
     if (req.method === "PUT" || req.method === "DELETE") {
       const result = await db.query(
-        "SELECT organization_id, role FROM users WHERE id = $1",
+        `SELECT u.organization_id, u.role, o.status AS organization_status
+         FROM users u
+         LEFT JOIN organizations o ON o.id = u.organization_id
+         WHERE u.id = $1`,
         [req.params.id],
       );
       if (!result.rows.length) {
@@ -69,6 +72,14 @@ export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
       }
 
       const target = result.rows[0];
+
+      // An inactive tenant is frozen until a developer reactivates it.
+      if (target.organization_id && target.organization_status !== "active") {
+        return res.status(409).json({
+          error: "This employee belongs to an inactive organization. Reactivate the organization before managing this account.",
+        });
+      }
+
       if (user.role !== "developer") {
         if (target.organization_id !== user.organizationId) {
           return res.status(403).json({ error: "You can only manage users in your own organization." });
@@ -83,6 +94,21 @@ export const allowOwnOrganizationStaffManagement = async (req, res, next) => {
           return res.status(403).json({ error: "You cannot move users to another organization." });
         }
       }
+
+      // Developers may move employees between tenants, but never into an
+      // inactive tenant. addEmployee performs the equivalent check on create.
+      if (req.method === "PUT" && req.body?.organization_id) {
+        const destination = await db.query(
+          "SELECT id FROM organizations WHERE id = $1 AND status = 'active'",
+          [req.body.organization_id],
+        );
+        if (!destination.rows.length) {
+          return res.status(409).json({
+            error: "The destination organization does not exist or is inactive.",
+          });
+        }
+      }
+
       return next();
     }
 
