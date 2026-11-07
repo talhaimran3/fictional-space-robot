@@ -16,6 +16,7 @@ export const getorganizationById = async (req, res) => {
         o.slug,
         o.created_by,
         o.created_at,
+        o.status,
         COALESCE(
           (
             SELECT json_agg(jsonb_build_object(
