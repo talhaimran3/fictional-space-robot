@@ -215,11 +215,11 @@ export const addEmployee = async (req, res) => {
 
   try {
     const orgCheck = await db.query(
-      "SELECT id FROM organizations WHERE id = $1",
+      "SELECT id FROM organizations WHERE id = $1 AND status = 'active'",
       [organization_id],
     );
     if (!orgCheck.rows.length) {
-      return res.status(404).json({ success: false, message: "Organization not found." });
+      return res.status(404).json({ success: false, message: "Organization not found or inactive." });
     }
 
     const existing = await db.query(
