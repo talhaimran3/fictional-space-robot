@@ -19,12 +19,12 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid authentication token." });
     }
 
-    // Load the current role and organization on every request. Role changes
-    // therefore take effect immediately instead of waiting for a JWT to expire.
     const result = await db.query(
-      `SELECT id, email, full_name, role, organization_id, status
-       FROM users
-       WHERE id = $1
+      `SELECT u.id, u.email, u.full_name, u.role, u.organization_id, u.status,
+              o.status AS organization_status
+       FROM users u
+       LEFT JOIN organizations o ON o.id = u.organization_id
+       WHERE u.id = $1
        LIMIT 1`,
       [userId],
     );
@@ -34,6 +34,10 @@ export const authenticateToken = async (req, res, next) => {
     }
 
     const currentUser = result.rows[0];
+    if (currentUser.organization_id && currentUser.organization_status !== "active") {
+      return res.status(403).json({ error: "Your organization is inactive. Contact your platform administrator." });
+    }
+
     req.user = {
       ...claims,
       id: currentUser.id,
