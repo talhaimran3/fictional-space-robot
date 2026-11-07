@@ -33,7 +33,7 @@
 .pln-shifts__heading {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: space-around;
   gap: 18px;
   margin-bottom: 24px;
 }
@@ -759,6 +759,7 @@
   .pln-shifts__heading {
     flex-direction: column;
     gap: 12px;
+            align-items: stretch;
   }
 
   .pln-shifts__heading-meta {
