@@ -31,7 +31,11 @@ function Avatar({ name, imageUrl }) {
 
 export default function Topbar({
   onOpenMobileMenu,
+<<<<<<< HEAD
   searchPlaceholder = "Search...",
+=======
+
+>>>>>>> 0566eb3 (did few edits)
 }) {
   const { user } = useAuth();
   const displayName = user?.full_name || user?.name || user?.email || "Account";
@@ -49,11 +53,15 @@ export default function Topbar({
         <Menu size={21} />
       </button>
 
+<<<<<<< HEAD
       <label className="pl-global-search">
         <Search size={18} aria-hidden="true" />
         <input aria-label="Search" placeholder={searchPlaceholder} />
       </label>
 
+=======
+    
+>>>>>>> 0566eb3 (did few edits)
       <div className="pl-header-actions">
         <Link
           className="pl-notification-button"
