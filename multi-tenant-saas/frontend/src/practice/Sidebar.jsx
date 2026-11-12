@@ -8,7 +8,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "./Sidebar.css";
 
@@ -62,7 +62,6 @@ export default function Sidebar({ isOpen = false, onClose }) {
         id="pl-sidebar"
         className={`pl-sidebar${isOpen ? " is-open" : ""}`}
         aria-label="Main navigation"
-        aria-hidden={!isOpen && typeof window !== "undefined" && window.innerWidth <= 820}
       >
         <div className="pl-brand-row">
           <Link className="pl-brand" to="/admin2" onClick={closeMenu}>
