@@ -1,6 +1,14 @@
-import React from "react";
-import { LayoutDashboard, CalendarDays, Users, Building2, Settings, Sparkles, ArrowUpRight, X, Clock3, UserRound } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import {
+  Building2,
+  CalendarDays,
+  Clock3,
+  LayoutDashboard,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "./Sidebar.css";
 
@@ -12,34 +20,88 @@ const MANAGEMENT_ITEMS = [
   { label: "Organizations", icon: Building2, path: "/admin2/organizations" },
   { label: "My Profile", icon: UserRound, path: "/admin2/profile" },
 ];
+
 const STAFF_ITEMS = [
   { label: "My Schedule", icon: CalendarDays, path: "/admin2" },
   { label: "My Timesheets", icon: Clock3, path: "/admin2/timesheets" },
   { label: "My Profile", icon: UserRound, path: "/admin2/profile" },
 ];
 
-export default function Sidebar({ isOpen, onClose, activeNav = "Dashboard" }) {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function Sidebar({ isOpen = false, onClose }) {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const items = user?.role === "staff" ? STAFF_ITEMS : MANAGEMENT_ITEMS;
+  const activePath = pathname === "/admin2/dashboard" ? "/admin2" : pathname;
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose?.();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const closeMenu = () => onClose?.();
 
   return (
     <>
-      {isOpen && <div className="pl-mobile-backdrop" onClick={onClose}/>}
-      <aside className={`pl-sidebar ${isOpen ? "is-open" : ""}`}>
-        <div className="pl-brand-row"><div className="pl-brand"><div className="pl-brand-mark">p<span/></div><strong>plannr</strong></div><button className="pl-mobile-close" type="button" onClick={onClose} aria-label="Close navigation"><X size={20}/></button></div>
-        <nav className="pl-main-nav"><div className="pl-nav-label">WORKSPACE</div><div className="pl-nav-menu">
-          {items.map(({ label, icon: Icon, path }) => {
-            const active = path === "/admin2" ? location.pathname === "/admin2" : activeNav === label || (label === "My Timesheets" && location.pathname === "/admin2/timesheets");
-            return <button key={label} className={`pl-nav-item ${active ? "is-active" : ""}`} type="button" onClick={() => { navigate(path); onClose?.(); }}>
-              <Icon size={19} strokeWidth={1.8}/><span>{label}</span>{active && <span className="pl-active-dot"/>}
-            </button>;
-          })}
-        </div></nav>
-        <div className="pl-sidebar-spacer"/>
-        {user?.role !== "staff" && <div className="pl-support-card"><div className="pl-support-title"><Sparkles size={16}/><strong>A little help?</strong></div><p>Your team, running smoothly. We’re here if you need us.</p><button type="button" className="pl-help-link" onClick={() => alert("Help Center")}>Visit help center <ArrowUpRight size={14}/></button></div>}
-        <button className="pl-settings-link" type="button" onClick={() => navigate("/admin2/profile")}><Settings size={19}/><span>Profile settings</span></button>
+      {isOpen && (
+        <button
+          className="pl-mobile-backdrop"
+          type="button"
+          onClick={closeMenu}
+          aria-label="Close navigation"
+          tabIndex={-1}
+        />
+      )}
+
+      <aside
+        id="pl-sidebar"
+        className={`pl-sidebar${isOpen ? " is-open" : ""}`}
+        aria-label="Main navigation"
+        aria-hidden={!isOpen && typeof window !== "undefined" && window.innerWidth <= 820}
+      >
+        <div className="pl-brand-row">
+          <Link className="pl-brand" to="/admin2" onClick={closeMenu}>
+            <span className="pl-brand-mark" aria-hidden="true">p<span /></span>
+            <strong>plannr</strong>
+          </Link>
+
+          <button
+            className="pl-mobile-close"
+            type="button"
+            onClick={closeMenu}
+            aria-label="Close navigation"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="pl-main-nav">
+          <div className="pl-nav-label">WORKSPACE</div>
+          <div className="pl-nav-menu">
+            {items.map(({ label, icon: Icon, path }) => (
+              <NavLink
+                key={path}
+                to={path}
+                end={path === "/admin2"}
+                onClick={closeMenu}
+                className={({ isActive }) =>
+                  `pl-nav-item${(isActive || activePath === path) ? " is-active" : ""}`
+                }
+              >
+                <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+                <span>{label}</span>
+                {activePath === path && <span className="pl-active-dot" />}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+
+        <div className="pl-sidebar-spacer" />
         <div className="pl-copyright">© 2026 Plannr</div>
       </aside>
     </>
