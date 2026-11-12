@@ -1,40 +1,42 @@
 import React from "react";
-import { Search, Plus, Bell, ChevronDown, Menu, Home } from "lucide-react";
+import { Home, Menu, Search } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "./TopBar.css";
-import { useNavigate } from "react-router-dom";
 
-function Avatar({ initials, imageUrl, tone = "green", size = "small" }) {
+const ROLE_LABELS = {
+  developer: "Developer",
+  admin: "Administrator",
+  manager: "Manager",
+  staff: "Staff",
+};
+
+function getInitials(name = "") {
+  return name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("") || "U";
+}
+
+function Avatar({ name, imageUrl }) {
   return (
-    <div className={`pl-avatar pl-avatar--${tone} pl-avatar--${size}`}>
-      {imageUrl ? <img src={imageUrl} alt="" /> : initials}
-    </div>
+    <span className="pl-avatar pl-avatar--green pl-avatar--small" aria-hidden="true">
+      {imageUrl ? <img src={imageUrl} alt="" /> : getInitials(name)}
+    </span>
   );
 }
 
-const roleLabel = (role) =>
-  ({
-    developer: "Developer",
-    admin: "Administrator",
-    manager: "Manager",
-    staff: "Staff",
-  })[role] || "Account";
-
 export default function Topbar({
   onOpenMobileMenu,
-
-  searchPlaceholder = "Search anything...",
+  searchPlaceholder = "Search...",
 }) {
   const { user } = useAuth();
   const displayName = user?.full_name || user?.name || user?.email || "Account";
-  const initials =
-    displayName
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0].toUpperCase())
-      .join("") || "U";
-const navigate = useNavigate();
+  const role = ROLE_LABELS[user?.role] || "Account";
+
   return (
     <header className="pl-topbar">
       <button
@@ -42,50 +44,37 @@ const navigate = useNavigate();
         type="button"
         onClick={onOpenMobileMenu}
         aria-label="Open navigation"
+        aria-controls="pl-sidebar"
       >
-        <Menu size={22} />
+        <Menu size={21} />
       </button>
 
-      <div className="pl-global-search">
-        <Search size={18} />
+      <label className="pl-global-search">
+        <Search size={18} aria-hidden="true" />
         <input aria-label="Search" placeholder={searchPlaceholder} />
-        <span className="pl-shortcut">Ctrl K</span>
-      </div>
+      </label>
 
       <div className="pl-header-actions">
-      
-
-        <button
+        <Link
           className="pl-notification-button"
-          type="button"
-          aria-label="Home"
-          onClick={() => navigate("/")}
+          to="/admin2"
+          aria-label="Go to dashboard"
+          title="Dashboard"
         >
-          <Home size={20} />
-        </button>
-        <button
-          className="pl-notification-button"
-          type="button"
-          aria-label="Notifications"
-          onClick={() => alert("Notifications are not configured yet.")}
-        >
-          <Bell size={20} />
-        </button>
+          <Home size={19} />
+        </Link>
 
-        <div className="pl-topbar-divider" />
-
-        <button
+        <Link
           className="pl-profile"
-          type="button"
-          onClick={() => navigate("/admin2/profile")}
+          to="/admin2/profile"
+          aria-label={`Open profile for ${displayName}`}
         >
-          <Avatar initials={initials} imageUrl={user?.profile_image_url} />
-          <div className="pl-profile-info">
+          <Avatar name={displayName} imageUrl={user?.profile_image_url} />
+          <span className="pl-profile-info">
             <strong>{displayName}</strong>
-            <span>{roleLabel(user?.role)}</span>
-          </div>
-          <ChevronDown size={14} />
-        </button>
+            <span>{role}</span>
+          </span>
+        </Link>
       </div>
     </header>
   );
