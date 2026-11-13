@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import db from "../config/database.js";
+import { profileEmail } from "../templates/emailTemplates.js";
+import { notifyEmployeeAndOrganizationManagers } from "../services/emailNotificationService.js";
 import {
   deleteLocalProfileImage,
   getLocalProfileImageUrl,
@@ -250,6 +252,13 @@ export const addEmployee = async (req, res) => {
       ],
     );
 
+    const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [organization_id]);
+    await notifyEmployeeAndOrganizationManagers({
+      employee: result.rows[0],
+      organizationId: organization_id,
+      email: profileEmail({ action: "created", employee: result.rows[0], organizationName: organization.rows[0]?.name }),
+    });
+
     return res.status(201).json({ success: true, employee: result.rows[0] });
   } catch (error) {
     console.error("Error adding user:", error);
@@ -303,6 +312,14 @@ export const updateEmployee = async (req, res) => {
     if (!rows.length) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
+
+    const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [rows[0].organization_id]);
+    await notifyEmployeeAndOrganizationManagers({
+      employee: rows[0],
+      organizationId: rows[0].organization_id,
+      email: profileEmail({ action: "updated", employee: rows[0], organizationName: organization.rows[0]?.name }),
+    });
+
     return res.status(200).json({ success: true, employee: rows[0] });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -318,6 +335,16 @@ export const updateEmployee = async (req, res) => {
 
 export const deleteEmployee = async (req, res) => {
   try {
+    const existing = await db.query(
+      `SELECT id, email, full_name, organization_id
+       FROM users WHERE id = $1 LIMIT 1`,
+      [req.params.id],
+    );
+    if (!existing.rows.length) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const employee = existing.rows[0];
     const { rows } = await db.query(
       "DELETE FROM users WHERE id = $1 RETURNING id",
       [req.params.id],
@@ -325,6 +352,19 @@ export const deleteEmployee = async (req, res) => {
     if (!rows.length) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
+
+    if (employee.organization_id) {
+      const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [employee.organization_id]);
+      await notifyEmployeeAndOrganizationManagers({
+        employee,
+        organizationId: employee.organization_id,
+        email: profileEmail({ action: "deleted", employee, organizationName: organization.rows[0]?.name }),
+      });
+    } else {
+      const { sendEmailSafely } = await import("../services/emailNotificationService.js");
+      await sendEmailSafely({ to: employee.email, ...profileEmail({ action: "deleted", employee }) });
+    }
+
     return res.status(200).json({ success: true, message: "User deleted successfully." });
   } catch (error) {
     console.error("Error deleting user:", error);
