@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import db from "../config/database.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { welcomeEmail } from "../templates/emailTemplates.js";
+import { sendEmailSafely } from "../services/emailNotificationService.js";
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -22,6 +24,8 @@ export const registerUser = async (req, res) => {
        RETURNING id, email, full_name, role, organization_id`,
       [email.trim().toLowerCase(), hashedPassword, name.trim()]
     );
+
+    await sendEmailSafely({ to: result.rows[0].email, ...welcomeEmail({ name: result.rows[0].full_name }) });
 
     res.status(201).json({
       message: "User registered successfully",
