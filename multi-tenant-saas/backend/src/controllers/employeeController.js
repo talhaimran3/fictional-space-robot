@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import db from "../config/database.js";
 import { profileEmail } from "../templates/emailTemplates.js";
-import { notifyEmployeeAndOrganizationManagers } from "../services/emailNotificationService.js";
+import { notifyEmployeeAndOrganizationManagers, sendEmailSafely } from "../services/emailNotificationService.js";
 import {
   deleteLocalProfileImage,
   getLocalProfileImageUrl,
@@ -217,7 +217,7 @@ export const addEmployee = async (req, res) => {
 
   try {
     const orgCheck = await db.query(
-      "SELECT id FROM organizations WHERE id = $1 AND status = 'active'",
+      "SELECT id, name FROM organizations WHERE id = $1 AND status = 'active'",
       [organization_id],
     );
     if (!orgCheck.rows.length) {
@@ -252,11 +252,10 @@ export const addEmployee = async (req, res) => {
       ],
     );
 
-    const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [organization_id]);
     await notifyEmployeeAndOrganizationManagers({
       employee: result.rows[0],
       organizationId: organization_id,
-      email: profileEmail({ action: "created", employee: result.rows[0], organizationName: organization.rows[0]?.name }),
+      email: profileEmail({ action: "created", employee: result.rows[0], organizationName: orgCheck.rows[0]?.name }),
     });
 
     return res.status(201).json({ success: true, employee: result.rows[0] });
@@ -313,11 +312,10 @@ export const updateEmployee = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [rows[0].organization_id]);
     await notifyEmployeeAndOrganizationManagers({
       employee: rows[0],
       organizationId: rows[0].organization_id,
-      email: profileEmail({ action: "updated", employee: rows[0], organizationName: organization.rows[0]?.name }),
+      email: profileEmail({ action: "updated", employee: rows[0] }),
     });
 
     return res.status(200).json({ success: true, employee: rows[0] });
@@ -354,14 +352,12 @@ export const deleteEmployee = async (req, res) => {
     }
 
     if (employee.organization_id) {
-      const organization = await db.query("SELECT name FROM organizations WHERE id = $1", [employee.organization_id]);
       await notifyEmployeeAndOrganizationManagers({
         employee,
         organizationId: employee.organization_id,
-        email: profileEmail({ action: "deleted", employee, organizationName: organization.rows[0]?.name }),
+        email: profileEmail({ action: "deleted", employee }),
       });
     } else {
-      const { sendEmailSafely } = await import("../services/emailNotificationService.js");
       await sendEmailSafely({ to: employee.email, ...profileEmail({ action: "deleted", employee }) });
     }
 
