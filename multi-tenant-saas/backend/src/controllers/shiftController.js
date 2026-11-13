@@ -1,4 +1,35 @@
 import db from "../config/database.js";
+import { shiftEmail } from "../templates/emailTemplates.js";
+import { sendEmailSafely } from "../services/emailNotificationService.js";
+
+const notifyAssignedShiftEmployee = async (shift, action, organizationId) => {
+  if (!shift?.employee_id) return;
+
+  try {
+    const { rows } = await db.query(
+      `SELECT u.email, u.full_name, o.name AS organization_name
+       FROM users u
+       LEFT JOIN organizations o ON o.id = u.organization_id
+       WHERE u.id = $1 AND u.organization_id = $2
+       LIMIT 1`,
+      [shift.employee_id, organizationId],
+    );
+    const employee = rows[0];
+    if (!employee?.email) return;
+
+    await sendEmailSafely({
+      to: employee.email,
+      ...shiftEmail({
+        action,
+        employee,
+        shift,
+        organizationName: employee.organization_name,
+      }),
+    });
+  } catch (error) {
+    console.error("Shift notification failed:", error.message);
+  }
+};
 
 const isOrganizationActive = async (organizationId) => {
   const result = await db.query(
@@ -63,6 +94,8 @@ export const addShifts = async (req, res) => {
       String(name || "Scheduled Shift").trim() || "Scheduled Shift",
       req.user.id,
     ]);
+
+    await notifyAssignedShiftEmployee(rows[0], "created", organization_id);
 
     return res.status(201).json({
       message: "Shift added successfully",
@@ -207,6 +240,8 @@ export const updateShift = async (req, res, next) => {
         error: "Shift not found or does not belong to this organization.",
       });
     }
+    await notifyAssignedShiftEmployee(result.rows[0], "updated", organization_id);
+
     return res.json({
       status: "success",
       message: "Shift updated successfully",
@@ -239,6 +274,7 @@ export const deleteShift = async (req, res) => {
         error: "Shift not found or does not belong to this organization.",
       });
     }
+    await notifyAssignedShiftEmployee(rows[0], "deleted", organization_id);
     return res.json({ message: "Shift deleted successfully", data: rows[0] });
   } catch (error) {
     console.error("Failed to delete shift:", error);
