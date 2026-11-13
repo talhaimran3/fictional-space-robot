@@ -1,25 +1,13 @@
 import db from "../config/database.js";
-import { sendEmail } from "../services/emailService.js";
-import dotenv from "dotenv";
-dotenv.config();
+import { organizationEmail } from "../templates/emailTemplates.js";
+import { sendEmailSafely } from "../services/emailNotificationService.js";
 
-const notifyDeveloper = async (user, subject, message) => {
+const notifyDeveloper = async (user, action, organization) => {
   if (!user?.email) return;
-  try {
-    const safeName = String(user.full_name || "there").replace(/[&<>"']/g, (char) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-    })[char]);
-    const safeMessage = String(message).replace(/[&<>"']/g, (char) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-    })[char]);
-    await sendEmail({
-      to: user.email,
-      subject,
-      html: `<h2>Hello ${safeName},</h2><p>${safeMessage}</p>`,
-    });
-  } catch (error) {
-    console.error("Organization notification email failed:", error.message);
-  }
+  await sendEmailSafely({
+    to: user.email,
+    ...organizationEmail({ action, actor: user, organization }),
+  });
 };
 
 const getOrganizationInput = (req, res) => {
@@ -55,7 +43,7 @@ export const addorganization = async (req, res) => {
       [name, slug, created_by],
     );
 
-    await notifyDeveloper(req.user, "Organization created", `Organization "${name}" was created successfully.`);
+    await notifyDeveloper(req.user, "created", rows[0]);
     return res.status(201).json({ data: rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -85,7 +73,7 @@ export const editOrganization = async (req, res) => {
       return res.status(404).json({ error: "Organization not found" });
     }
 
-    await notifyDeveloper(req.user, "Organization updated", `Organization "${name}" was updated successfully.`);
+    await notifyDeveloper(req.user, "updated", result.rows[0]);
     return res.json({ data: result.rows[0] });
   } catch (error) {
     console.error("Database query failed:", error);
@@ -115,7 +103,7 @@ export const deactivateOrganization = async (req, res) => {
       return res.status(409).json({ error: "Organization is already inactive." });
     }
 
-    await notifyDeveloper(req.user, "Organization deactivated", `Organization "${result.rows[0].name}" has been deactivated. Its records have been preserved.`);
+    await notifyDeveloper(req.user, "deactivated", result.rows[0]);
     return res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error("Failed to deactivate organization:", error);
@@ -140,7 +128,7 @@ export const reactivateOrganization = async (req, res) => {
       return res.status(409).json({ error: "Organization is already active." });
     }
 
-    await notifyDeveloper(req.user, "Organization reactivated", `Organization "${result.rows[0].name}" has been reactivated.`);
+    await notifyDeveloper(req.user, "reactivated", result.rows[0]);
     return res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error("Failed to reactivate organization:", error);
