@@ -35,7 +35,8 @@ export const notifyEmployeeAndOrganizationManagers = async ({
       employee?.email,
       ...rows.map((row) => row.email),
     ];
-    await sendEmailSafely({ to: recipients, ...email });
+    // Send separately so recipients cannot see one another in the To field.
+    await Promise.all(recipients.map((recipient) => sendEmailSafely({ to: recipient, ...email })));
   } catch (error) {
     console.error("Organization staff notification failed:", error.message);
   }
