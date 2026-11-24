@@ -18,3 +18,17 @@ git  commit -m "did few edits"
 git push origin main3
 
 
+cd /workspaces/codespaces-blank/fictional-space-robot
+
+git pull --ff-only origin main3
+
+
+node --input-type=module -e '
+import { sendEmail } from "./src/services/emailService.js";
+
+await sendEmail({
+  to: "talhaimran.cce@gmail.com",
+  subject: "Plannr SMTP Test",
+  html: "<h2>Email service working</h2><p>Test notification.</p>"
+});
+'
