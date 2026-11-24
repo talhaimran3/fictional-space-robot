@@ -3,75 +3,113 @@ import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, MapPin, Wallet } from "lucide-react";
 import "./LandingPage.css";
 
+const features = [
+  {
+    icon: CalendarDays,
+    title: "Smart rota builder",
+    description:
+      "Plan weekly shifts with a clearer view of coverage, conflicts, and overtime.",
+  },
+  {
+    icon: MapPin,
+    title: "Location-based attendance",
+    description:
+      "Keep attendance connected to assigned locations for more reliable records.",
+  },
+  {
+    icon: Wallet,
+    title: "Live labor budgeting",
+    description:
+      "Keep an eye on labor costs before you publish the week's rota.",
+  },
+];
+
 export default function LandingPage() {
   return (
-    <div className="sp-landing">
-      <section className="sp-landing-hero">
-        <span className="sp-landing-pill">Next-gen workforce management</span>
-        <h1>
-          Automated rota scheduling
-          <br />
-          built for multi-branch teams
-        </h1>
-        <p>
-          Eliminate shift overlaps, manage labor budgets in real time, and let
-          staff swap schedules without the spreadsheet chaos.
-        </p>
-        <div className="sp-landing-ctas">
-          <Link to="/register" className="sp-landing-btn sp-landing-btn--primary">
-            Get started free
-            <ArrowRight size={16} />
-          </Link>
-          <Link to="/pricing" className="sp-landing-btn sp-landing-btn--outline">
-            View plans &amp; pricing
-          </Link>
+    <main className="sp-landing">
+      <section className="sp-landing-hero" aria-labelledby="sp-landing-title">
+        <div className="sp-landing-hero-content">
+          <span className="sp-landing-pill">
+            <span className="sp-landing-pill-dot" aria-hidden="true" />
+            Workforce management, made clearer
+          </span>
+
+          <h1 id="sp-landing-title">
+            Smarter scheduling
+            <br />
+            for <span className="sp-landing-heading-accent">every location</span>
+          </h1>
+
+          <p className="sp-landing-intro">
+            Bring shifts, attendance, and labor costs together. Give managers a
+            clearer way to plan and give teams a schedule they can rely on.
+          </p>
+
+          <div className="sp-landing-ctas">
+            <Link
+              to="/register"
+              className="sp-landing-btn sp-landing-btn--primary"
+            >
+              Get started free
+              <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <Link
+              to="/pricing"
+              className="sp-landing-btn sp-landing-btn--outline"
+            >
+              View plans &amp; pricing
+            </Link>
+          </div>
+
+          <p className="sp-landing-note">
+            Scheduling and workforce operations in one place.
+          </p>
         </div>
       </section>
 
-      <section className="sp-landing-features">
+      <section
+        className="sp-landing-features"
+        aria-labelledby="sp-landing-features-title"
+      >
         <div className="sp-landing-section-head">
-          <h2>Everything you need to run your locations</h2>
-          <p>Designed for shift managers and store leads.</p>
+          <span className="sp-landing-kicker">BUILT FOR BUSY TEAMS</span>
+          <h2 id="sp-landing-features-title">
+            Everything you need to run your locations
+          </h2>
+          <p>
+            Less time coordinating schedules. More time keeping work moving.
+          </p>
         </div>
+
         <div className="sp-landing-grid">
-          <article className="sp-landing-card">
-            <div className="sp-landing-icon">
-              <CalendarDays size={20} />
-            </div>
-            <h3>Smart rota builder</h3>
-            <p>
-              Drag and drop weekly shifts with automated conflict and overtime
-              detection.
-            </p>
-          </article>
-          <article className="sp-landing-card">
-            <div className="sp-landing-icon">
-              <MapPin size={20} />
-            </div>
-            <h3>Geofenced clock-ins</h3>
-            <p>
-              Ensure employees clock in from their assigned location for cleaner
-              attendance.
-            </p>
-          </article>
-          <article className="sp-landing-card">
-            <div className="sp-landing-icon">
-              <Wallet size={20} />
-            </div>
-            <h3>Live labor budgeting</h3>
-            <p>
-              Track wages against budget caps before you publish the week&apos;s
-              rota.
-            </p>
-          </article>
+          {features.map(({ icon: Icon, title, description }, index) => (
+            <article className="sp-landing-card" key={title}>
+              <div className="sp-landing-icon">
+                <Icon size={21} strokeWidth={1.8} aria-hidden="true" />
+              </div>
+              <span className="sp-landing-card-number">
+                0{index + 1}
+              </span>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </article>
+          ))}
         </div>
+
         <div className="sp-landing-cta-band">
-          <h2>See all product features</h2>
-          <Link to="/features" className="sp-landing-btn sp-landing-btn--primary">
+          <div className="sp-landing-cta-copy">
+            <span className="sp-landing-kicker">READY WHEN YOU ARE</span>
+            <h2>Make your next schedule a simpler one.</h2>
+          </div>
+          <Link
+            to="/features"
+            className="sp-landing-btn sp-landing-btn--primary"
+          >
             Explore features
+            <ArrowRight size={17} aria-hidden="true" />
           </Link>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
