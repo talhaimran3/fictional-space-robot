@@ -29,15 +29,14 @@ export default function LandingPage() {
     <main className="sp-landing">
       <section className="sp-landing-hero" aria-labelledby="sp-landing-title">
         <div className="sp-landing-hero-content">
-          <span className="sp-landing-pill">
-            <span className="sp-landing-pill-dot" aria-hidden="true" />
+          <span className="sp-landing-eyebrow">
             Workforce management, made clearer
           </span>
 
           <h1 id="sp-landing-title">
             Smarter scheduling
             <br />
-            for <span className="sp-landing-heading-accent">every location</span>
+            for <span className="sp-landing-heading-accent">every location.</span>
           </h1>
 
           <p className="sp-landing-intro">
@@ -51,11 +50,11 @@ export default function LandingPage() {
               className="sp-landing-btn sp-landing-btn--primary"
             >
               Get started free
-              <ArrowRight size={17} aria-hidden="true" />
+              <ArrowRight size={16} aria-hidden="true" />
             </Link>
             <Link
               to="/pricing"
-              className="sp-landing-btn sp-landing-btn--outline"
+              className="sp-landing-btn sp-landing-btn--secondary"
             >
               View plans &amp; pricing
             </Link>
@@ -72,7 +71,7 @@ export default function LandingPage() {
         aria-labelledby="sp-landing-features-title"
       >
         <div className="sp-landing-section-head">
-          <span className="sp-landing-kicker">BUILT FOR BUSY TEAMS</span>
+          <span className="sp-landing-kicker">CORE CAPABILITIES</span>
           <h2 id="sp-landing-features-title">
             Everything you need to run your locations
           </h2>
@@ -83,11 +82,15 @@ export default function LandingPage() {
 
         <div className="sp-landing-grid">
           {features.map(({ icon: Icon, title, description }, index) => (
-            <article className="sp-landing-card" key={title}>
+            <article
+              className="sp-landing-card"
+              key={title}
+              style={{ "--sp-landing-card-index": index }}
+            >
               <div className="sp-landing-icon">
-                <Icon size={21} strokeWidth={1.8} aria-hidden="true" />
+                <Icon size={20} strokeWidth={1.7} aria-hidden="true" />
               </div>
-              <span className="sp-landing-card-number">
+              <span className="sp-landing-card-number" aria-hidden="true">
                 0{index + 1}
               </span>
               <h3>{title}</h3>
@@ -98,7 +101,7 @@ export default function LandingPage() {
 
         <div className="sp-landing-cta-band">
           <div className="sp-landing-cta-copy">
-            <span className="sp-landing-kicker">READY WHEN YOU ARE</span>
+            <span className="sp-landing-kicker">GET STARTED</span>
             <h2>Make your next schedule a simpler one.</h2>
           </div>
           <Link
@@ -106,7 +109,7 @@ export default function LandingPage() {
             className="sp-landing-btn sp-landing-btn--primary"
           >
             Explore features
-            <ArrowRight size={17} aria-hidden="true" />
+            <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </section>
