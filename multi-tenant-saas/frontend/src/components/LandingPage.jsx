@@ -16,6 +16,7 @@ const features = [
     description:
       "Keep attendance connected to assigned locations for more reliable records.",
   },
+  
   {
     icon: Wallet,
     title: "Live labor budgeting",
